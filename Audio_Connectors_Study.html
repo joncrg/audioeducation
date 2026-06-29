@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audio Connectors — Active Study</title>
+<style>
+  :root{
+    --navy:#14203A; --navy2:#22324F; --ink:#1B2A4A; --gold:#C77E2A; --gold2:#E0A458;
+    --teal:#3E9C92; --paper:#EEF2F8; --card:#FFFFFF; --line:#DCE4EF; --muted:#6B7791;
+    --body:#33405A;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5}
+  a{color:var(--gold)}
+  .topbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 22px;gap:16px;box-shadow:0 2px 10px rgba(10,18,35,.25)}
+  .mark{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.16em;
+    font-size:14px;text-transform:uppercase}
+  .mark .dot{width:11px;height:11px;border-radius:50%;background:var(--gold2);
+    box-shadow:0 0 0 4px rgba(224,164,88,.18)}
+  .mark small{display:block;letter-spacing:.18em;color:#9fb0cc;font-size:10px;font-weight:600;margin-top:1px}
+  .prog{font-family:var(--mono);font-size:12px;color:#cfdaec;text-align:right;white-space:nowrap}
+  .prog b{color:var(--gold2)}
+  .prog .bar{margin-top:5px;width:130px;height:5px;border-radius:3px;background:#2c3d5c;overflow:hidden}
+  .prog .bar i{display:block;height:100%;width:0;background:var(--gold2);transition:width .4s}
+  .tabs{position:sticky;top:56px;z-index:19;background:var(--card);border-bottom:1px solid var(--line);
+    display:flex;gap:2px;padding:0 14px;overflow-x:auto}
+  .tabs button{appearance:none;border:0;background:none;font-family:var(--sans);font-size:14px;
+    font-weight:600;color:var(--muted);padding:14px 14px 11px;cursor:pointer;white-space:nowrap;
+    border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--ink)}
+  .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 20px 70px}
+  h1.page{font-size:25px;margin:.1em 0 .15em;letter-spacing:-.01em}
+  .lead{color:var(--body);max-width:64ch;margin:.2em 0 1.4em}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;margin-bottom:4px}
+
+  /* connector art */
+  .art{background:linear-gradient(160deg,#fafbfe,#eef3fa);border-radius:10px;display:flex;
+    align-items:center;justify-content:center}
+  .art svg{width:100%;height:auto;display:block}
+
+  /* explore grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
+  .ccard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;
+    cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;text-align:left}
+  .ccard:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(20,32,58,.10);border-color:#c6d4e6}
+  .ccard .art{height:104px;margin-bottom:10px;padding:8px}
+  .ccard h3{margin:0;font-size:15.5px}
+  .ccard p{margin:3px 0 8px;color:var(--muted);font-size:12.5px;min-height:32px}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;padding:3px 7px;border-radius:20px;
+    background:#eef2f8;color:var(--ink);border:1px solid #e0e7f1;white-space:nowrap}
+  .chip.bal{background:#e4f3f0;color:#1f6b62;border-color:#c9e7e1}
+  .chip.unb{background:#fbeede;color:#9a5a16;border-color:#f3dcc0}
+  .chip.dom{background:#e8edf6;color:#33456b;border-color:#d6e0ef}
+  .chip.spk{background:#f6ebe0;color:#8a521b;border-color:#ecd9c4}
+  .chip.lock{background:#eaf0fb;color:#2f4d8f;border-color:#d8e2f5}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(15,23,40,.55);display:none;z-index:40;
+    padding:24px;overflow:auto}
+  .overlay.on{display:flex;align-items:flex-start;justify-content:center}
+  .panel{background:var(--card);border-radius:16px;max-width:720px;width:100%;margin:auto;
+    overflow:hidden;box-shadow:0 24px 60px rgba(10,18,35,.4)}
+  .panel .head{display:flex;gap:18px;padding:20px 22px;background:linear-gradient(150deg,#fafbfe,#eaf0f9);
+    border-bottom:1px solid var(--line);align-items:center}
+  .panel .head .art{width:170px;min-width:170px;height:104px;padding:6px}
+  .panel .head h2{margin:0 0 2px;font-size:21px}
+  .panel .head .sub{color:var(--muted);font-size:13px;font-family:var(--mono)}
+  .panel .body{padding:20px 22px}
+  .rowdl{display:grid;grid-template-columns:130px 1fr;gap:6px 14px;margin:0 0 16px}
+  .rowdl dt{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--muted);padding-top:2px}
+  .rowdl dd{margin:0;color:var(--ink);font-size:14px}
+  .note{border-radius:10px;padding:12px 14px;font-size:13.5px}
+  .note.watch{background:#fbf2e6;border:1px solid #f0ddc2}
+  .note.watch b{color:#9a5a16}
+  .note.hook{background:#eef4f3;border:1px solid #d6e8e4;margin-top:10px}
+  .note.hook b{color:#22685f}
+  .x{margin-left:auto;appearance:none;border:1px solid var(--line);background:#fff;border-radius:8px;
+    width:34px;height:34px;font-size:18px;cursor:pointer;color:var(--muted)}
+  .x:hover{color:var(--ink);border-color:#c6d4e6}
+
+  /* buttons */
+  .btn{appearance:none;border:0;border-radius:10px;font-family:var(--sans);font-weight:650;font-size:14px;
+    padding:11px 18px;cursor:pointer}
+  .btn.primary{background:var(--navy);color:#fff}
+  .btn.primary:hover{background:#1d2c4a}
+  .btn.gold{background:var(--gold);color:#fff}
+  .btn.gold:hover{background:#b06f22}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:#c6d4e6}
+  .btn.ok{background:#e4f3f0;color:#1f6b62;border:1px solid #c9e7e1}
+  .btn.again{background:#fbeede;color:#9a5a16;border:1px solid #f3dcc0}
+
+  /* flashcards + quiz shared */
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;
+    max-width:600px;margin:0 auto;text-align:center;box-shadow:0 8px 24px rgba(20,32,58,.06)}
+  .stage .art{height:170px;padding:12px;margin:0 auto 14px}
+  .counter{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.05em}
+  .prompt{font-size:15px;color:var(--body);margin:10px auto 16px;max-width:46ch}
+  .reveal{border-top:1px dashed var(--line);margin-top:16px;padding-top:16px;text-align:left}
+  .reveal h3{margin:0 0 8px;font-size:20px;text-align:center}
+  .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:16px}
+  .toggle button{appearance:none;border:0;background:#fff;padding:8px 14px;font-size:13px;font-weight:600;
+    color:var(--muted);cursor:pointer}
+  .toggle button[aria-pressed="true"]{background:var(--navy);color:#fff}
+
+  .opts{display:grid;gap:9px;margin:6px auto 0;max-width:520px;text-align:left}
+  .opt{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:13px 15px;
+    font-size:14.5px;font-family:var(--sans);cursor:pointer;color:var(--ink);transition:.1s}
+  .opt:hover:not(:disabled){border-color:#9fb6d6;background:#f7faff}
+  .opt:disabled{cursor:default}
+  .opt.correct{background:#e4f3f0;border-color:#7cc6bb;color:#1c5f57;font-weight:600}
+  .opt.wrong{background:#fbe9e9;border-color:#e3a3a3;color:#9a3a3a}
+  .explain{margin:14px auto 0;max-width:520px;background:#f3f6fb;border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;font-size:13.5px;color:var(--body);text-align:left;display:none}
+  .explain.on{display:block}
+  .explain b{color:var(--ink)}
+  .scorebar{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px}
+  .bigscore{font-size:46px;font-weight:800;color:var(--navy);text-align:center;line-height:1}
+  .bigscore span{color:var(--gold)}
+
+  /* how-to */
+  .steps{counter-reset:s;display:grid;gap:14px;margin:18px 0}
+  .step{display:grid;grid-template-columns:42px 1fr;gap:14px;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:14px 16px}
+  .step .n{counter-increment:s;font-family:var(--mono);font-weight:700;color:#fff;background:var(--navy);
+    width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .step .n::before{content:counter(s)}
+  .step h3{margin:0 0 3px;font-size:16px}
+  .step p{margin:0;color:var(--body);font-size:13.5px}
+  .rhythm{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px 18px;margin-top:8px}
+  .rhythm li{margin:10px 0;color:var(--body);font-size:14px}
+  .rhythm b{color:var(--ink)}
+  .callout{background:linear-gradient(150deg,#1a2742,#22324f);color:#dbe4f2;border-radius:12px;
+    padding:16px 18px;margin:18px 0;font-size:14px}
+  .callout b{color:var(--gold2)}
+
+  footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;
+    padding:22px;font-family:var(--mono);letter-spacing:.04em}
+  @media (max-width:560px){
+    .panel .head{flex-direction:column;align-items:flex-start}
+    .rowdl{grid-template-columns:1fr}
+    .rowdl dt{padding-top:8px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  :focus-visible{outline:3px solid var(--gold2);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="mark"><span class="dot"></span><div>Audio Connectors<small>Active study · COMM 340</small></div></div>
+  <div class="prog" id="prog">Mastered <b><span id="pm">0</span>/11</b><div class="bar"><i id="pbar"></i></div></div>
+</div>
+<nav class="tabs" id="tabs" role="tablist">
+  <button role="tab" data-tab="howto" aria-selected="true">How to use this</button>
+  <button role="tab" data-tab="explore" aria-selected="false">Explore</button>
+  <button role="tab" data-tab="cards" aria-selected="false">Flashcards</button>
+  <button role="tab" data-tab="quiz" aria-selected="false">Quiz</button>
+  <button role="tab" data-tab="chain" aria-selected="false">Signal-chain challenges</button>
+</nav>
+<main class="wrap" id="view"></main>
+<div class="overlay" id="overlay"><div class="panel" id="panel"></div></div>
+<footer>University of Evansville · Audio Engineering &nbsp;•&nbsp; Self-paced connector study</footer>
+
+<script>
+/* ---------------- connector SVGs ---------------- */
+const cable = `<path d='M150 45 H120' stroke='#1B2A4A' stroke-width='9' fill='none' stroke-linecap='round'/>`;
+const SVG = {
+  xlr:`<svg viewBox='0 0 160 90'>${cable}<rect x='84' y='27' width='40' height='36' rx='7' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='3'/><circle cx='50' cy='45' r='28' fill='#EAEFF6' stroke='#1B2A4A' stroke-width='3'/><circle cx='50' cy='32' r='5' fill='#C77E2A'/><circle cx='39' cy='52' r='5' fill='#C77E2A'/><circle cx='61' cy='52' r='5' fill='#C77E2A'/></svg>`,
+  trs:`<svg viewBox='0 0 160 90'>${cable}<rect x='92' y='33' width='30' height='24' rx='5' fill='#1B2A4A'/><rect x='14' y='38' width='80' height='14' rx='7' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2.5'/><rect x='40' y='38' width='3.4' height='14' fill='#1B2A4A'/><rect x='58' y='38' width='3.4' height='14' fill='#1B2A4A'/></svg>`,
+  ts:`<svg viewBox='0 0 160 90'>${cable}<rect x='92' y='33' width='30' height='24' rx='5' fill='#1B2A4A'/><rect x='14' y='38' width='80' height='14' rx='7' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2.5'/><rect x='49' y='38' width='3.4' height='14' fill='#1B2A4A'/></svg>`,
+  mini:`<svg viewBox='0 0 160 90'>${cable}<rect x='96' y='37' width='24' height='16' rx='4' fill='#1B2A4A'/><rect x='36' y='40' width='62' height='10' rx='5' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2.2'/><rect x='58' y='40' width='2.8' height='10' fill='#1B2A4A'/><rect x='71' y='40' width='2.8' height='10' fill='#1B2A4A'/></svg>`,
+  speakon:`<svg viewBox='0 0 160 90'>${cable}<rect x='86' y='28' width='36' height='34' rx='8' fill='#1B2A4A'/><circle cx='50' cy='45' r='29' fill='#222C44' stroke='#1B2A4A' stroke-width='3'/><circle cx='50' cy='45' r='20' fill='#2E3C5C'/><rect x='47' y='13' width='6' height='9' rx='2' fill='#C9D2DF'/><circle cx='42' cy='38' r='4.4' fill='#C77E2A'/><circle cx='58' cy='38' r='4.4' fill='#C77E2A'/><circle cx='42' cy='53' r='4.4' fill='#C77E2A'/><circle cx='58' cy='53' r='4.4' fill='#C77E2A'/></svg>`,
+  rca:`<svg viewBox='0 0 160 90'>${cable}<rect x='84' y='34' width='38' height='22' rx='5' fill='#1B2A4A'/><rect x='44' y='33' width='44' height='24' rx='6' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2.5'/><rect x='44' y='33' width='10' height='24' rx='3' fill='#C0392B'/><rect x='40' y='38' width='6' height='14' rx='2' fill='#9aa6b8'/><rect x='14' y='42' width='30' height='6' rx='3' fill='#C77E2A'/></svg>`,
+  usba:`<svg viewBox='0 0 160 90'>${cable}<rect x='86' y='30' width='34' height='30' rx='5' fill='#1B2A4A'/><rect x='20' y='32' width='70' height='26' rx='3' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2.5'/><rect x='28' y='36' width='52' height='8' rx='1.5' fill='#1B2A4A'/></svg>`,
+  usbb:`<svg viewBox='0 0 160 90'>${cable}<rect x='90' y='30' width='30' height='30' rx='5' fill='#1B2A4A'/><path d='M40 30 h44 a4 4 0 0 1 4 4 v22 a4 4 0 0 1 -4 4 h-58 a4 4 0 0 1 -4 -4 v-10 z' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2.5' stroke-linejoin='round'/></svg>`,
+  usbc:`<svg viewBox='0 0 160 90'>${cable}<rect x='88' y='32' width='34' height='26' rx='5' fill='#1B2A4A'/><rect x='26' y='35' width='66' height='20' rx='10' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2.5'/><rect x='36' y='42' width='46' height='6' rx='3' fill='#9aa6b8'/></svg>`,
+  midi:`<svg viewBox='0 0 160 90'>${cable}<rect x='86' y='28' width='36' height='34' rx='8' fill='#1B2A4A'/><circle cx='50' cy='45' r='29' fill='#EAEFF6' stroke='#1B2A4A' stroke-width='3'/><rect x='44' y='60' width='12' height='8' rx='2' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2'/><circle cx='50' cy='30' r='4.2' fill='#C77E2A'/><circle cx='34' cy='40' r='4.2' fill='#C77E2A'/><circle cx='66' cy='40' r='4.2' fill='#C77E2A'/><circle cx='40' cy='55' r='4.2' fill='#C77E2A'/><circle cx='60' cy='55' r='4.2' fill='#C77E2A'/></svg>`,
+  rj45:`<svg viewBox='0 0 160 90'>${cable}<rect x='88' y='28' width='34' height='34' rx='5' fill='#1B2A4A'/><rect x='22' y='26' width='68' height='34' rx='4' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2.5'/><rect x='40' y='60' width='20' height='9' rx='2' fill='#2E3C5C'/>${[0,1,2,3,4,5,6,7].map(i=>`<rect x='${30+i*7}' y='30' width='3' height='13' fill='#C77E2A'/>`).join('')}</svg>`
+};
+
+/* ---------------- data ---------------- */
+const C = [
+  {id:'xlr',name:'XLR',sub:'3-pin · "Cannon"',domain:'Analog audio',dchip:'AUDIO',bal:'Balanced',
+   level:'Mic / line',lchip:'MIC / LINE',contacts:'3 pins (ground, hot, cold)',locking:true,
+   gender:'Gendered (male / female)',connects:'Microphone → preamp/interface; interface line out → powered speaker',
+   tags:{audio:true,bal:'Balanced',lvl:'Mic / line',phantom:true},
+   watch:'Carries +48V phantom power for condensers — the one connector where the power and the audio share the cable. The two signal pins carry the same audio in opposite polarity, which is why long runs stay quiet.',
+   hook:'Three pins: ground, hot, cold. Hot and cold carry identical audio flipped in polarity — flip one back at the other end and any noise picked up along the way cancels.'},
+
+  {id:'trs',name:'1/4" TRS',sub:'Tip · Ring · Sleeve',domain:'Analog audio',dchip:'AUDIO',bal:'Balanced',
+   level:'Line / headphone',lchip:'LINE / HP',contacts:'3 (Tip, Ring, Sleeve)',locking:false,gender:null,
+   connects:'Balanced line out → monitor; headphones → headphone amp; channel inserts',
+   tags:{audio:true,bal:'Balanced',lvl:'Line / headphone'},
+   watch:'The same plug does two unrelated jobs: one balanced mono signal, OR two unbalanced signals (stereo L/R). The gear it plugs into decides which — the cable looks identical either way.',
+   hook:'A TS with one extra contact. That third conductor buys you either noise rejection (balanced mono) or a second channel (stereo).'},
+
+  {id:'ts',name:'1/4" TS',sub:'Tip · Sleeve',domain:'Analog audio',dchip:'AUDIO',bal:'Unbalanced',
+   level:'Instrument',lchip:'INSTRUMENT',contacts:'2 (Tip, Sleeve)',locking:false,gender:null,
+   connects:'Guitar / bass / keys → amp or DI; unbalanced patch points',
+   tags:{audio:true,bal:'Unbalanced',lvl:'Instrument'},
+   watch:'Unbalanced, so it picks up hum on long runs — keep it short (roughly under 15–20 ft). Never use it from a power amp to a speaker; it can not handle the current and does not lock.',
+   hook:'Tip + Sleeve = signal + ground, nothing more. The plain guitar cable.'},
+
+  {id:'mini',name:'1/8" (3.5mm) TRS',sub:'Mini TRS',domain:'Analog audio',dchip:'AUDIO',bal:'Unbalanced',
+   level:'Headphone / line',lchip:'HEADPHONE',contacts:'3 (Tip, Ring, Sleeve)',locking:false,gender:null,
+   connects:'Phone / laptop / recorder → headphones or a consumer input',
+   tags:{audio:true,bal:'Unbalanced',lvl:'Headphone / line'},
+   watch:'The portable headphone jack — small and easy to damage. A four-contact TRRS version adds a microphone conductor for headsets.',
+   hook:'Same Tip-Ring-Sleeve idea as the 1/4", shrunk down. Stereo out of one tiny plug.'},
+
+  {id:'speakon',name:'Neutrik speakON',sub:'NL2 / NL4 locking',domain:'Analog audio',dchip:'AUDIO',bal:'—',
+   level:'Speaker level',lchip:'SPEAKER',contacts:'2 or 4 (pairs)',locking:true,gender:null,
+   connects:'Power amplifier output → passive PA speaker',
+   tags:{audio:true,bal:'—',lvl:'Speaker',locking:true},
+   watch:'Use this — not a 1/4" TS — between a power amp and a passive speaker. It locks on, carries high current safely, and hides the contacts so you can not touch a live, high-voltage terminal.',
+   hook:'Built for the one signal that can hurt you: an amplifier\u2019s speaker output. Locks, encloses the contacts, handles the current.'},
+
+  {id:'rca',name:'RCA Phono',sub:'Color-coded',domain:'Analog audio',dchip:'AUDIO',bal:'Unbalanced',
+   level:'Line (consumer)',lchip:'LINE −10',contacts:'1 per plug (center + ground)',locking:false,gender:null,
+   connects:'Consumer gear — CD player, turntable, receiver; also coax S/PDIF digital',
+   tags:{audio:true,bal:'Unbalanced',lvl:'Line (consumer)'},
+   watch:'Consumer line level (−10 dBV) is quieter than pro (+4 dBu), so expect a level jump when you bridge consumer and pro gear. Red = right, white/black = left, yellow = composite video.',
+   hook:'One plug per channel, color-coded. The consumer cousin of the pro connectors.'},
+
+  {id:'usba',name:'USB-A',sub:'Host end',domain:'Data',dchip:'DATA',bal:'—',
+   level:'Digital data',lchip:'DATA',contacts:'Flat rectangle',locking:false,gender:null,
+   connects:'Audio interface / controller → computer (the computer end)',
+   tags:{audio:false,bal:'—',lvl:'Data'},
+   watch:'This is data, not audio — the actual analog-to-digital conversion happens inside the interface, never in the cable. The flat end goes into the computer, and only one way up.',
+   hook:'The computer end of an interface cable. Flat, one-way, carries data.'},
+
+  {id:'usbb',name:'USB-B',sub:'Device end',domain:'Data',dchip:'DATA',bal:'—',
+   level:'Digital data',lchip:'DATA',contacts:'Square shell',locking:false,gender:null,
+   connects:'Audio interface / MIDI controller (device side) → computer',
+   tags:{audio:false,bal:'—',lvl:'Data'},
+   watch:'The chunky, square end that lives on the back of the interface itself — the counterpart to the USB-A that goes to the computer.',
+   hook:'Square and sturdy: the device end of the cable, found on most interfaces.'},
+
+  {id:'usbc',name:'USB-C',sub:'Reversible',domain:'Data',dchip:'DATA',bal:'—',
+   level:'Digital data',lchip:'DATA',contacts:'Reversible oval',locking:false,gender:null,
+   connects:'Modern interfaces and mobile devices → computer',
+   tags:{audio:false,bal:'—',lvl:'Data'},
+   watch:'Reversible and increasingly universal — but the shape tells you nothing about speed or what it supports. Two identical-looking USB-C ports can behave very differently.',
+   hook:'The modern reversible plug. The connector is standardized; its capabilities are not.'},
+
+  {id:'midi',name:'MIDI (5-pin DIN)',sub:'DIN-5',domain:'Control',dchip:'CONTROL',bal:'—',
+   level:'Control data',lchip:'CONTROL',contacts:'5-pin DIN',locking:false,gender:null,
+   connects:'Keyboard / controller MIDI out → synth, module, or interface MIDI in',
+   tags:{audio:false,bal:'—',lvl:'Control'},
+   watch:'Carries performance data — notes, velocity, controllers — across 16 channels, but no audio at all. Nothing you can hear travels down this cable; it only tells instruments what to do.',
+   hook:'Five pins of instructions, zero sound. It says what to play, not the sound itself.'},
+
+  {id:'rj45',name:'Ethernet (RJ45)',sub:'Networked audio',domain:'Digital audio',dchip:'NETWORK',bal:'—',
+   level:'Networked digital',lchip:'NETWORK',contacts:'8-pin modular',locking:false,gender:null,
+   connects:'Networked audio (Dante, AES67, AVB) between stage boxes, consoles, interfaces',
+   tags:{audio:true,bal:'—',lvl:'Network'},
+   watch:'Physically the same plug as computer networking, but here it moves dozens to hundreds of channels of digital audio on one cable. Because it is a network, clocking and switch setup matter.',
+   hook:'One cable, hundreds of channels. The backbone of modern digital audio (Dante).'},
+];
+const byId = Object.fromEntries(C.map(c=>[c.id,c]));
+const TOTAL = C.length;
+
+/* ---------------- progress ---------------- */
+const KEY='ue_connectors_v1';
+let store={mastered:{},quizBest:0,chainBest:0};
+try{const s=localStorage.getItem(KEY); if(s) store=Object.assign(store,JSON.parse(s));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+function masteredCount(){return C.filter(c=>(store.mastered[c.id]||0)>=2).length;}
+function refreshProgress(){
+  const m=masteredCount();
+  const b=document.querySelector('#prog b');
+  if(b)b.innerHTML='<span id="pm">'+m+'</span>/'+TOTAL;
+  const bar=document.getElementById('pbar');
+  if(bar)bar.style.width=(100*m/TOTAL)+'%';
+}
+
+/* ---------------- helpers ---------------- */
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const x in a){if(x==='class')e.className=a[x];else if(x==='html')e.innerHTML=a[x];else e.setAttribute(x,a[x]);}k.flat().forEach(c=>e.append(c));return e;};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+function chipsFor(c){
+  const w=el('div',{class:'chips'});
+  w.append(el('span',{class:'chip dom'},c.dchip));
+  if(c.bal==='Balanced')w.append(el('span',{class:'chip bal'},'BALANCED'));
+  else if(c.bal==='Unbalanced')w.append(el('span',{class:'chip unb'},'UNBALANCED'));
+  if(c.lchip!==c.dchip)w.append(el('span',{class:c.lchip==='SPEAKER'?'chip spk':'chip'},c.lchip));
+  if(c.locking)w.append(el('span',{class:'chip lock'},'LOCKING'));
+  return w;
+}
+
+/* ---------------- views ---------------- */
+const view=document.getElementById('view');
+
+function renderHowto(){
+  view.innerHTML='';
+  view.append(
+    el('div',{class:'eyebrow'},'A method for studying on your own'),
+    el('h1',{class:'page'},'Don\u2019t read it. Recall it, then use it.'),
+    el('p',{class:'lead'},'Re-reading a reference sheet feels like learning, but it only trains recognition \u2014 you nod at a labeled photo. On a real session you need the opposite: to name a connector cold, know what it carries, and pick the right one to get signal from one box to the next. These four stages build that, in order.'),
+  );
+  const steps=[
+    ['Explore the deeper layer','Go through all 11 connectors. For each, look past the name to what actually matters: balanced or unbalanced, what signal level it carries, audio vs. data, and the one gotcha. Tap any card for the full detail.'],
+    ['Drill with flashcards','Cover the name and quiz yourself by sight. Out loud, answer three things: what is it, is it balanced, and what does it connect? Mark \u201cGot it\u201d only when you nailed all three. Two clean passes marks it mastered.'],
+    ['Test yourself','The quiz mixes identification with the attributes \u2014 balanced?, what level?, which one locks? Aim for a score you would be comfortable defending out loud, not just a lucky pass.'],
+    ['Solve real signal chains','The last stage is the real skill: given a task (\u201cget a condenser mic into your interface\u201d), choose the right connector and know why. This is where the facts become usable.'],
+  ];
+  const wrap=el('div',{class:'steps'});
+  steps.forEach(s=>wrap.append(el('div',{class:'step'},el('div',{class:'n'}),el('div',{},el('h3',{},s[0]),el('p',{},s[1])))));
+  view.append(wrap);
+  view.append(el('div',{class:'eyebrow'},'A rhythm that fits an async term'));
+  const ul=el('ul',{class:'rhythm'});
+  [['Week 1','Explore all 11, then start flashcards. Five focused minutes of recall a day beats one long cram.'],
+   ['Week 2','Keep drilling the cards that won\u2019t stick. Once the deck feels easy, take the quiz and push for 9/10 or better.'],
+   ['Week 3','Move to the signal-chain challenges. If one trips you up, go back to that connector\u2019s detail and read the \u201cwatch out.\u201d'],
+   ['Week 4','Use it for real \u2014 these are the same connectors and the same reasoning behind your Equipment Research presentation.']
+  ].forEach(r=>ul.append(el('li',{},el('b',{},r[0]+' \u2014 '),r[1])));
+  view.append(ul);
+  view.append(el('div',{class:'callout',html:'<b>Why this works:</b> pulling an answer out of memory (and getting it wrong sometimes) builds far stronger recall than reading the right answer again. Struggling for a second is the point, not a sign you\u2019re behind.'}));
+  view.append(el('div',{style:'text-align:center;margin-top:8px'},el('button',{class:'btn gold'},'Start exploring \u2192')));
+  view.querySelector('.btn.gold').onclick=()=>setTab('explore');
+}
+
+function openDetail(c){
+  const p=document.getElementById('panel');
+  p.innerHTML='';
+  const head=el('div',{class:'head'},
+    el('div',{class:'art',html:SVG[c.id]}),
+    el('div',{},el('h2',{},c.name),el('div',{class:'sub'},c.sub)),
+    el('button',{class:'x','aria-label':'Close'},'\u00d7'));
+  head.querySelector('.x').onclick=closeDetail;
+  const dl=el('dl',{class:'rowdl'});
+  const rows=[['Signal',c.domain],['Balanced?',c.bal==='—'?'Not applicable':c.bal],
+    ['Level',c.level],['Contacts',c.contacts],['Locking',c.locking?'Yes':'No']];
+  if(c.gender)rows.push(['Gender',c.gender]);
+  rows.push(['Connects',c.connects]);
+  rows.forEach(r=>{dl.append(el('dt',{},r[0]),el('dd',{},r[1]));});
+  const body=el('div',{class:'body'},chipsFor(c),el('div',{style:'height:14px'}),dl,
+    el('div',{class:'note watch',html:'<b>Watch out \u2014 </b>'+c.watch}),
+    el('div',{class:'note hook',html:'<b>Remember it \u2014 </b>'+c.hook}));
+  p.append(head,body);
+  document.getElementById('overlay').classList.add('on');
+}
+function closeDetail(){document.getElementById('overlay').classList.remove('on');}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeDetail();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+
+function renderExplore(){
+  view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'11 connectors'),
+    el('h1',{class:'page'},'Explore'),
+    el('p',{class:'lead'},'Tap any connector for the full detail \u2014 signal type, level, anatomy, what it connects, and the mistake to avoid.'));
+  const g=el('div',{class:'grid'});
+  C.forEach(c=>{
+    const card=el('div',{class:'ccard',tabindex:'0',role:'button'},
+      el('div',{class:'art',html:SVG[c.id]}),
+      el('h3',{},c.name),
+      el('p',{},c.connects),
+      chipsFor(c));
+    card.onclick=()=>openDetail(c);
+    card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openDetail(c);}};
+    g.append(card);
+  });
+  view.append(g);
+}
+
+/* ---------------- flashcards ---------------- */
+let fcQueue=[],fcRevealed=false;
+function renderCards(){
+  view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Active recall'),el('h1',{class:'page'},'Flashcards'));
+  const t=el('div',{class:'toggle'},
+    el('button',{'data-n':'reset'},'Restart deck'),
+    el('button',{'data-n':'shuffleweak'},'Drill the unmastered'));
+  view.append(el('p',{class:'lead'},'Name it out loud, then answer: balanced? what level? connects what? Reveal to check, and mark \u201cGot it\u201d only when you had all three.'));
+  view.append(t);
+  const host=el('div',{id:'fcHost'});view.append(host);
+  t.children[0].onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};
+  t.children[1].onclick=()=>{const weak=C.filter(c=>(store.mastered[c.id]||0)<2).map(c=>c.id);fcQueue=shuffle(weak.length?weak:C.map(c=>c.id));drawCard();};
+  if(!fcQueue.length)fcQueue=shuffle(C.map(c=>c.id));
+  drawCard();
+}
+function drawCard(){
+  const host=document.getElementById('fcHost');if(!host)return;host.innerHTML='';
+  if(!fcQueue.length){
+    host.append(el('div',{class:'stage'},
+      el('div',{class:'bigscore',html:'\u2713'}),
+      el('p',{class:'prompt'},'Deck complete. '+masteredCount()+' of '+TOTAL+' connectors mastered.'),
+      el('div',{class:'actions'},el('button',{class:'btn primary'},'Go again'))));
+    host.querySelector('.btn').onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};
+    return;
+  }
+  fcRevealed=false;
+  const c=byId[fcQueue[0]];
+  const done=TOTAL-fcQueue.length+1;
+  const stage=el('div',{class:'stage'},
+    el('div',{class:'counter'},'Card '+done+' of '+TOTAL+(((store.mastered[c.id]||0)>=2)?' · mastered':'')),
+    el('div',{class:'art',html:SVG[c.id]}),
+    el('div',{class:'prompt'},'What connector is this? Is it balanced, and what does it carry?'),
+    el('div',{id:'fcReveal'}));
+  host.append(stage);
+  const rev=stage.querySelector('#fcReveal');
+  rev.append(el('div',{class:'actions'},el('button',{class:'btn primary'},'Reveal answer')));
+  rev.querySelector('.btn').onclick=()=>showCardBack(c);
+}
+function showCardBack(c){
+  const rev=document.getElementById('fcReveal');rev.innerHTML='';
+  const block=el('div',{class:'reveal'},
+    el('h3',{},c.name),
+    (()=>{const w=chipsFor(c);w.style.justifyContent='center';w.style.marginBottom='10px';return w;})(),
+    el('div',{class:'note hook',html:'<b>Connects \u2014 </b>'+c.connects}));
+  rev.append(block,
+    el('div',{class:'actions'},
+      el('button',{class:'btn again'},'Review again'),
+      el('button',{class:'btn ok'},'Got it')));
+  const [again,ok]=rev.querySelectorAll('.actions .btn');
+  again.onclick=()=>{fcQueue.push(fcQueue.shift());drawCard();};
+  ok.onclick=()=>{store.mastered[c.id]=(store.mastered[c.id]||0)+1;save();refreshProgress();fcQueue.shift();drawCard();};
+}
+
+/* ---------------- quiz ---------------- */
+function buildQuizPool(){
+  const pool=[];
+  // identify by image
+  C.forEach(c=>{
+    const others=shuffle(C.filter(x=>x.id!==c.id)).slice(0,3).map(x=>x.name);
+    pool.push({svg:c.id,q:'Which connector is this?',opts:shuffle([c.name,...others]),a:c.name,
+      ex:'<b>'+c.name+'.</b> '+c.hook});
+  });
+  // balanced?
+  C.filter(c=>c.bal!=='—').forEach(c=>{
+    pool.push({q:'Is the '+c.name+' balanced or unbalanced?',opts:['Balanced','Unbalanced'],a:c.bal,
+      ex:'<b>'+c.bal+'.</b> '+(c.bal==='Balanced'?'Its extra conductor lets noise picked up along the run cancel out.':'It has no noise-cancelling conductor, so keep runs short.')});
+  });
+  // level
+  const levelOpts=['Mic / line level','Instrument level','Speaker level','Headphone / consumer line','Digital data','Control data'];
+  const levelMap={'Mic / line':'Mic / line level','Instrument':'Instrument level','Speaker level':'Speaker level',
+    'Headphone / line':'Headphone / consumer line','Line / headphone':'Headphone / consumer line',
+    'Line (consumer)':'Headphone / consumer line','Digital data':'Digital data','Control data':'Control data','Networked digital':'Digital data'};
+  C.forEach(c=>{const a=levelMap[c.level];if(!a)return;
+    pool.push({q:'What does the '+c.name+' typically carry?',opts:shuffle([a,...shuffle(levelOpts.filter(o=>o!==a)).slice(0,3)]),a,
+      ex:'<b>'+a+'.</b> '+c.connects+'.'});});
+  // special concept questions
+  pool.push({q:'Which connector should carry a high-power amplifier output to a passive speaker?',
+    opts:shuffle(['Neutrik speakON','1/4" TS','XLR','RCA Phono']),a:'Neutrik speakON',
+    ex:'<b>speakON.</b> It locks, handles the current, and encloses the live contacts. A 1/4" TS can not do any of that safely.'});
+  pool.push({q:'Which connector carries +48V phantom power to a condenser mic?',
+    opts:shuffle(['XLR','1/4" TRS','USB-B','RCA Phono']),a:'XLR',
+    ex:'<b>XLR.</b> Phantom power rides the same balanced XLR cable that carries the mic\u2019s audio.'});
+  pool.push({q:'Which connector carries control data \u2014 not audio?',
+    opts:shuffle(['MIDI (5-pin DIN)','1/8" (3.5mm) TRS','XLR','Neutrik speakON']),a:'MIDI (5-pin DIN)',
+    ex:'<b>MIDI.</b> It sends notes and controller messages. No sound travels on it.'});
+  pool.push({q:'Which connector moves many channels of digital audio over a network?',
+    opts:shuffle(['Ethernet (RJ45)','XLR','1/4" TRS','USB-A']),a:'Ethernet (RJ45)',
+    ex:'<b>Ethernet (RJ45).</b> Protocols like Dante carry dozens to hundreds of channels on one network cable.'});
+  pool.push({q:'On an audio interface cable, which end plugs into the computer?',
+    opts:shuffle(['USB-A','USB-B','XLR','MIDI (5-pin DIN)']),a:'USB-A',
+    ex:'<b>USB-A.</b> The flat host end goes to the computer; the square USB-B end sits on the interface.'});
+  return pool;
+}
+let quiz={list:[],i:0,score:0,wrong:[]};
+function renderQuiz(){
+  view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Check yourself'),el('h1',{class:'page'},'Quiz'));
+  view.append(el('div',{id:'qHost'}));
+  startQuiz();
+}
+function startQuiz(){
+  quiz={list:shuffle(buildQuizPool()).slice(0,10),i:0,score:0,wrong:[]};
+  drawQ();
+}
+function drawQ(){
+  const host=document.getElementById('qHost');if(!host)return;host.innerHTML='';
+  if(quiz.i>=quiz.list.length){
+    if(quiz.score>store.quizBest){store.quizBest=quiz.score;save();}
+    const stage=el('div',{class:'stage'},
+      el('div',{class:'bigscore',html:quiz.score+'<span>/'+quiz.list.length+'</span>'}),
+      el('p',{class:'prompt'},quiz.score===quiz.list.length?'Perfect run. That\u2019s recall you can trust on a gig.':
+        quiz.score>=8?'Strong. Mop up the few you missed and you\u2019re there.':'Good start \u2014 revisit the ones below and run it again.'),
+      el('div',{class:'scorebar'},'Best so far: '+store.quizBest+'/10'));
+    if(quiz.wrong.length){
+      const list=el('div',{class:'explain on'},el('b',{},'Worth another look: '),quiz.wrong.join(', '));
+      list.style.maxWidth='520px';stage.append(list);
+    }
+    stage.append(el('div',{class:'actions'},
+      el('button',{class:'btn primary'},'New quiz'),
+      el('button',{class:'btn ghost'},'Back to flashcards')));
+    host.append(stage);
+    const [again,back]=stage.querySelectorAll('.actions .btn');
+    again.onclick=startQuiz;back.onclick=()=>setTab('cards');
+    return;
+  }
+  const item=quiz.list[quiz.i];
+  const stage=el('div',{class:'stage'});
+  stage.append(el('div',{class:'scorebar'},'Question '+(quiz.i+1)+' of '+quiz.list.length+' · Score '+quiz.score));
+  if(item.svg)stage.append(el('div',{class:'art',html:SVG[item.svg]}));
+  stage.append(el('div',{class:'prompt'},item.q));
+  const opts=el('div',{class:'opts'});
+  item.opts.forEach(o=>{
+    const b=el('button',{class:'opt'},o);
+    b.onclick=()=>answerQ(b,o,item,stage);
+    opts.append(b);
+  });
+  stage.append(opts,el('div',{class:'explain',id:'qEx'}));
+  host.append(stage);
+}
+function answerQ(btn,choice,item,stage){
+  const buttons=stage.querySelectorAll('.opt');
+  buttons.forEach(b=>{b.disabled=true;if(b.textContent===item.a)b.classList.add('correct');});
+  if(choice===item.a)quiz.score++;else{btn.classList.add('wrong');quiz.wrong.push(item.a.replace(/<[^>]+>/g,''));}
+  const ex=stage.querySelector('#qEx');ex.innerHTML=item.ex;ex.classList.add('on');
+  const next=el('div',{class:'actions'},el('button',{class:'btn primary'},quiz.i===quiz.list.length-1?'See results':'Next'));
+  ex.after(next);
+  next.querySelector('.btn').onclick=()=>{quiz.i++;drawQ();};
+}
+
+/* ---------------- signal-chain challenges ---------------- */
+const CHAINS=[
+  {q:'You need to get a condenser microphone into your interface\u2019s mic input. Which connector?',
+   opts:['XLR','1/4" TS','RCA Phono','USB-B'],a:'XLR',
+   ex:'A mic signal is balanced and mic-level, and a condenser needs +48V phantom power \u2014 all of which ride a single <b>XLR</b> cable.'},
+  {q:'Plugging an electric guitar straight into a DI box or amp input. Which connector?',
+   opts:['1/4" TS','XLR','1/8" (3.5mm) TRS','Neutrik speakON'],a:'1/4" TS',
+   ex:'An instrument output is unbalanced and instrument-level \u2014 the plain <b>1/4" TS</b> guitar cable. Keep the run short to avoid hum.'},
+  {q:'Feeding your interface\u2019s balanced line output to a powered studio monitor that has a 1/4" input. Which connector?',
+   opts:['1/4" TRS','1/4" TS','RCA Phono','USB-C'],a:'1/4" TRS',
+   ex:'To keep the line-level signal balanced over the run you need all three conductors: <b>1/4" TRS</b>. A TS would work but drops the noise rejection. (An XLR cable does the same job on gear with XLR inputs.)'},
+  {q:'Sending a power amplifier\u2019s output to a passive PA speaker that draws a lot of power. Which connector?',
+   opts:['Neutrik speakON','1/4" TS','XLR','RCA Phono'],a:'Neutrik speakON',
+   ex:'Speaker-level output is high-current and can shock you. <b>speakON</b> locks on, carries the current, and encloses the contacts \u2014 the safe, correct choice.'},
+  {q:'Listening to your mix on headphones plugged into your phone. Which connector?',
+   opts:['1/8" (3.5mm) TRS','1/4" TRS','USB-B','RCA Phono'],a:'1/8" (3.5mm) TRS',
+   ex:'The portable headphone jack is the mini <b>1/8" TRS</b> \u2014 stereo (tip, ring, sleeve) out of one small plug.'},
+  {q:'Connecting an interface that has a square port on the back to your laptop. Which connector goes into the interface?',
+   opts:['USB-B','USB-A','XLR','MIDI (5-pin DIN)'],a:'USB-B',
+   ex:'The square <b>USB-B</b> end lives on the device; the flat USB-A end goes to the computer. It carries data \u2014 the conversion happens inside the interface.'},
+  {q:'Routing 32 channels of audio between a stage box and the console across the building. Which connector?',
+   opts:['Ethernet (RJ45)','XLR','1/4" TRS','Neutrik speakON'],a:'Ethernet (RJ45)',
+   ex:'One <b>Ethernet (RJ45)</b> cable running a network protocol like Dante carries all 32 channels (and far more) digitally.'},
+  {q:'Sending note and controller data from a MIDI keyboard to a hardware synth. Which connector?',
+   opts:['MIDI (5-pin DIN)','USB-C','1/8" (3.5mm) TRS','RCA Phono'],a:'MIDI (5-pin DIN)',
+   ex:'<b>MIDI (5-pin DIN)</b> carries the performance data. Remember: it tells the synth what to play, but no audio travels on it.'},
+  {q:'Connecting a consumer CD player\u2019s output into a mixer. Which connector?',
+   opts:['RCA Phono','XLR','Neutrik speakON','USB-A'],a:'RCA Phono',
+   ex:'Consumer line outputs use color-coded <b>RCA</b> (red/white). Expect it to be quieter than pro +4 dBu gear \u2014 you may need to add gain.'},
+];
+let chain={list:[],i:0,score:0};
+function renderChain(){
+  view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Apply it'),el('h1',{class:'page'},'Signal-chain challenges'),
+    el('p',{class:'lead'},'The real skill: given a task, pick the connector that gets signal from one box to the next \u2014 and know why. Reasoning beats memorizing here.'));
+  view.append(el('div',{id:'chHost'}));
+  startChain();
+}
+function startChain(){chain={list:shuffle(CHAINS),i:0,score:0};drawChain();}
+function drawChain(){
+  const host=document.getElementById('chHost');if(!host)return;host.innerHTML='';
+  if(chain.i>=chain.list.length){
+    if(chain.score>store.chainBest){store.chainBest=chain.score;save();}
+    const stage=el('div',{class:'stage'},
+      el('div',{class:'bigscore',html:chain.score+'<span>/'+chain.list.length+'</span>'}),
+      el('p',{class:'prompt'},chain.score===chain.list.length?'Every chain correct \u2014 you can think in signal flow now.':'Re-run the ones that tripped you, then check those connectors\u2019 details.'),
+      el('div',{class:'scorebar'},'Best so far: '+store.chainBest+'/'+CHAINS.length),
+      el('div',{class:'actions'},el('button',{class:'btn primary'},'Run again'),el('button',{class:'btn ghost'},'Explore connectors')));
+    host.append(stage);
+    const [again,exp]=stage.querySelectorAll('.actions .btn');
+    again.onclick=startChain;exp.onclick=()=>setTab('explore');
+    return;
+  }
+  const item=chain.list[chain.i];
+  const stage=el('div',{class:'stage'});
+  stage.append(el('div',{class:'scorebar'},'Challenge '+(chain.i+1)+' of '+chain.list.length+' · Score '+chain.score));
+  stage.append(el('div',{class:'prompt',html:item.q}));
+  const opts=el('div',{class:'opts'});
+  shuffle(item.opts).forEach(o=>{const b=el('button',{class:'opt'},o);b.onclick=()=>answerChain(b,o,item,stage);opts.append(b);});
+  stage.append(opts,el('div',{class:'explain',id:'chEx'}));
+  host.append(stage);
+}
+function answerChain(btn,choice,item,stage){
+  stage.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.textContent===item.a)b.classList.add('correct');});
+  if(choice===item.a)chain.score++;else btn.classList.add('wrong');
+  const ex=stage.querySelector('#chEx');ex.innerHTML='<b>'+item.a+'.</b> '+item.ex;ex.classList.add('on');
+  const next=el('div',{class:'actions'},el('button',{class:'btn primary'},chain.i===chain.list.length-1?'See results':'Next challenge'));
+  ex.after(next);next.querySelector('.btn').onclick=()=>{chain.i++;drawChain();};
+}
+
+/* ---------------- tabs ---------------- */
+const RENDER={howto:renderHowto,explore:renderExplore,cards:renderCards,quiz:renderQuiz,chain:renderChain};
+function setTab(name){
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name));
+  RENDER[name]();window.scrollTo({top:0,behavior:'instant'in document.documentElement.style?'instant':'auto'});
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+refreshProgress();setTab('howto');
+</script>
+</body>
+</html>

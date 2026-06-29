@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audio Fundamentals — Active Study</title>
+<style>
+  :root{
+    --navy:#14203A; --navy2:#22324F; --ink:#1B2A4A; --gold:#C77E2A; --gold2:#E0A458;
+    --teal:#3E9C92; --paper:#EEF2F8; --card:#FFFFFF; --line:#DCE4EF; --muted:#6B7791;
+    --body:#33405A; --scope:#0E1730;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5}
+  .topbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;display:flex;align-items:center;
+    justify-content:space-between;padding:12px 22px;gap:16px;box-shadow:0 2px 10px rgba(10,18,35,.25)}
+  .mark{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.16em;font-size:14px;text-transform:uppercase}
+  .mark svg{width:34px;height:20px}
+  .mark small{display:block;letter-spacing:.18em;color:#9fb0cc;font-size:10px;font-weight:600;margin-top:1px}
+  .prog{font-family:var(--mono);font-size:12px;color:#cfdaec;text-align:right;white-space:nowrap}
+  .prog b{color:var(--gold2)}
+  .prog .bar{margin-top:5px;width:130px;height:5px;border-radius:3px;background:#2c3d5c;overflow:hidden}
+  .prog .bar i{display:block;height:100%;width:0;background:var(--gold2);transition:width .4s}
+  .tabs{position:sticky;top:50px;z-index:19;background:var(--card);border-bottom:1px solid var(--line);
+    display:flex;gap:2px;padding:0 14px;overflow-x:auto}
+  .tabs button{appearance:none;border:0;background:none;font-family:var(--sans);font-size:14px;font-weight:600;
+    color:var(--muted);padding:14px 14px 11px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--ink)}
+  .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 20px 70px}
+  h1.page{font-size:25px;margin:.1em 0 .15em;letter-spacing:-.01em}
+  .lead{color:var(--body);max-width:64ch;margin:.2em 0 1.4em}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+  .grouphead{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;margin:26px 0 10px;display:flex;align-items:center;gap:10px}
+  .grouphead::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .art{background:linear-gradient(160deg,#fafbfe,#eef3fa);border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .art svg{width:100%;height:auto;display:block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
+  .ccard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;
+    transition:transform .12s,box-shadow .12s,border-color .12s;text-align:left}
+  .ccard:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(20,32,58,.10);border-color:#c6d4e6}
+  .ccard .art{height:96px;margin-bottom:10px;padding:6px}
+  .ccard h3{margin:0;font-size:15.5px}
+  .ccard p{margin:4px 0 0;color:var(--muted);font-size:12.5px}
+
+  .overlay{position:fixed;inset:0;background:rgba(15,23,40,.55);display:none;z-index:40;padding:24px;overflow:auto}
+  .overlay.on{display:flex;align-items:flex-start;justify-content:center}
+  .panel{background:var(--card);border-radius:16px;max-width:680px;width:100%;margin:auto;overflow:hidden;box-shadow:0 24px 60px rgba(10,18,35,.4)}
+  .panel .head{display:flex;gap:18px;padding:18px 22px;background:linear-gradient(150deg,#fafbfe,#eaf0f9);border-bottom:1px solid var(--line);align-items:center}
+  .panel .head .art{width:190px;min-width:190px;height:96px;padding:6px}
+  .panel .head h2{margin:0 0 2px;font-size:21px}
+  .panel .head .sub{color:var(--muted);font-size:12.5px;font-family:var(--mono)}
+  .panel .body{padding:18px 22px}
+  .panel .body p{margin:0 0 12px;color:var(--body);font-size:14px}
+  .formula{font-family:var(--mono);background:#11203f;color:#dbe7ff;border-radius:8px;padding:9px 13px;display:inline-block;font-size:13.5px;margin:0 0 12px}
+  .formula b{color:var(--gold2)}
+  .note{border-radius:10px;padding:12px 14px;font-size:13.5px}
+  .note.why{background:#eef4f3;border:1px solid #d6e8e4}
+  .note.why b{color:#22685f}
+  .x{margin-left:auto;appearance:none;border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;color:var(--muted)}
+  .x:hover{color:var(--ink);border-color:#c6d4e6}
+
+  .btn{appearance:none;border:0;border-radius:10px;font-family:var(--sans);font-weight:650;font-size:14px;padding:11px 18px;cursor:pointer}
+  .btn.primary{background:var(--navy);color:#fff}.btn.primary:hover{background:#1d2c4a}
+  .btn.gold{background:var(--gold);color:#fff}.btn.gold:hover{background:#b06f22}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}.btn.ghost:hover{border-color:#c6d4e6}
+  .btn.ok{background:#e4f3f0;color:#1f6b62;border:1px solid #c9e7e1}
+  .btn.again{background:#fbeede;color:#9a5a16;border:1px solid #f3dcc0}
+  .btn.sm{padding:8px 13px;font-size:13px}
+
+  .chip{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;padding:3px 8px;border-radius:20px;background:#eef2f8;color:var(--ink);border:1px solid #e0e7f1}
+  .chip.basics{background:#e8edf6;color:#33456b;border-color:#d6e0ef}
+  .chip.prop{background:#f6ebe0;color:#8a521b;border-color:#ecd9c4}
+  .chip.room{background:#e4f3f0;color:#1f6b62;border-color:#c9e7e1}
+
+  /* lab */
+  .station{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 24px rgba(20,32,58,.05)}
+  .station h3{margin:0 0 2px;font-size:18px}
+  .station .ssub{color:var(--muted);font-size:13px;margin-bottom:13px}
+  .scope{background:var(--scope);border-radius:12px;padding:6px;position:relative}
+  .scope canvas{display:block;width:100%;height:190px}
+  .ctl{display:grid;grid-template-columns:96px 1fr 104px;align-items:center;gap:12px;margin-top:13px}
+  .ctl label{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .ctl .val{font-family:var(--mono);font-size:13px;color:var(--ink);text-align:right}
+  input[type=range]{width:100%;accent-color:var(--gold);height:26px;cursor:pointer}
+  .lab-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .presets{display:flex;gap:6px;flex-wrap:wrap}
+  .readout{font-family:var(--mono);font-size:13px;color:var(--ink);background:#f3f6fb;border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+  .readout b{color:var(--gold)}
+  .notice{font-size:12.5px;color:var(--muted);background:#fbf6ee;border:1px solid #efe1cb;border-radius:8px;padding:9px 12px;margin-top:13px}
+  .tip{font-size:13.5px;color:var(--body);margin-top:12px}.tip b{color:var(--ink)}
+
+  /* flashcards + quiz */
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:600px;margin:0 auto;text-align:center;box-shadow:0 8px 24px rgba(20,32,58,.06)}
+  .stage .art{height:150px;padding:10px;margin:0 auto 14px;max-width:340px}
+  .counter{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.05em}
+  .prompt{font-size:15px;color:var(--body);margin:10px auto 16px;max-width:48ch}
+  .reveal{border-top:1px dashed var(--line);margin-top:16px;padding-top:16px;text-align:left}
+  .reveal h3{margin:0 0 10px;font-size:20px;text-align:center}
+  .reveal p{margin:0 0 10px;font-size:14px;color:var(--body)}
+  .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .opts{display:grid;gap:9px;margin:6px auto 0;max-width:520px;text-align:left}
+  .opt{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:13px 15px;font-size:14.5px;font-family:var(--sans);cursor:pointer;color:var(--ink);transition:.1s}
+  .opt:hover:not(:disabled){border-color:#9fb6d6;background:#f7faff}
+  .opt:disabled{cursor:default}
+  .opt.correct{background:#e4f3f0;border-color:#7cc6bb;color:#1c5f57;font-weight:600}
+  .opt.wrong{background:#fbe9e9;border-color:#e3a3a3;color:#9a3a3a}
+  .explain{margin:14px auto 0;max-width:520px;background:#f3f6fb;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13.5px;color:var(--body);text-align:left;display:none}
+  .explain.on{display:block}.explain b{color:var(--ink)}
+  .scorebar{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px}
+  .bigscore{font-size:46px;font-weight:800;color:var(--navy);text-align:center;line-height:1}
+  .bigscore span{color:var(--gold)}
+
+  .steps{counter-reset:s;display:grid;gap:14px;margin:18px 0}
+  .step{display:grid;grid-template-columns:42px 1fr;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .step .n{counter-increment:s;font-family:var(--mono);font-weight:700;color:#fff;background:var(--navy);width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .step .n::before{content:counter(s)}
+  .step h3{margin:0 0 3px;font-size:16px}.step p{margin:0;color:var(--body);font-size:13.5px}
+  .callout{background:linear-gradient(150deg,#1a2742,#22324f);color:#dbe4f2;border-radius:12px;padding:16px 18px;margin:18px 0;font-size:14px}
+  .callout b{color:var(--gold2)}.callout a{color:var(--gold2)}
+  footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;padding:22px;font-family:var(--mono);letter-spacing:.04em}
+  @media (max-width:560px){.panel .head{flex-direction:column;align-items:flex-start}.ctl{grid-template-columns:80px 1fr 76px}}
+  @media (prefers-reduced-motion:reduce){.ccard{transition:none}}
+  :focus-visible{outline:3px solid var(--gold2);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="mark">
+    <svg viewBox="0 0 40 24"><path d="M1 12 Q6 12 8 4 T15 12 T22 20 T29 4 T36 12 Q38 12 39 12" fill="none" stroke="#E0A458" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <div>Audio Fundamentals<small>Active study · COMM-340</small></div>
+  </div>
+  <div class="prog" id="prog">Mastered <b><span id="pm">0</span>/12</b><div class="bar"><i id="pbar"></i></div></div>
+</div>
+<nav class="tabs" id="tabs" role="tablist">
+  <button role="tab" data-tab="howto" aria-selected="true">How to use this</button>
+  <button role="tab" data-tab="learn" aria-selected="false">Learn</button>
+  <button role="tab" data-tab="lab" aria-selected="false">Lab · hear it</button>
+  <button role="tab" data-tab="cards" aria-selected="false">Flashcards</button>
+  <button role="tab" data-tab="quiz" aria-selected="false">Quiz</button>
+</nav>
+<main class="wrap" id="view"></main>
+<div class="overlay" id="overlay"><div class="panel" id="panel"></div></div>
+<footer>University of Evansville · Audio Engineering &nbsp;•&nbsp; Sound Reinforcement & Recording</footer>
+
+<script>
+/* ============ wave/SVG helpers ============ */
+function wpath(W,H,o){const A=o.A??18,n=o.n??3,ph=o.ph??0,mid=o.mid??H/2,sm=o.sm??160,st=o.st||'#C77E2A',sw=o.sw??2.6;
+  let d='';for(let i=0;i<=sm;i++){const x=W*i/sm,y=mid-A*Math.sin(2*Math.PI*(n*i/sm)+ph);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}
+  return `<path d='${d}' fill='none' stroke='${st}' stroke-width='${sw}' stroke-linecap='round'/>`;}
+function waveSVG(o){const W=o.W||220,H=o.H||96;const base=`<line x1='0' y1='${H/2}' x2='${W}' y2='${H/2}' stroke='#D7DEEA' stroke-width='1'/>`;
+  return `<svg viewBox='0 0 ${W} ${H}'>${base}${(o.paths||[]).map(p=>wpath(W,H,p)).join('')}${o.extra||''}</svg>`;}
+
+const VIZ = {
+  hearing:()=>`<svg viewBox='0 0 220 96'>
+    <defs><linearGradient id='hg' x1='0' x2='1'><stop offset='0' stop-color='#9aa6b8'/><stop offset='.18' stop-color='#C77E2A'/><stop offset='.55' stop-color='#3E9C92'/><stop offset='.85' stop-color='#C77E2A'/><stop offset='1' stop-color='#9aa6b8'/></linearGradient></defs>
+    <rect x='14' y='40' width='192' height='12' rx='6' fill='url(#hg)'/>
+    <text x='14' y='70' font-size='10' fill='#6B7791' font-family='monospace'>20 Hz</text>
+    <text x='176' y='70' font-size='10' fill='#6B7791' font-family='monospace'>20 kHz</text>
+    <text x='92' y='30' font-size='10' fill='#22685f' font-family='monospace'>most sensitive</text>
+    <path d='M110 34 l0 6' stroke='#3E9C92' stroke-width='2'/></svg>`,
+  hertz:()=>waveSVG({paths:[{n:4,A:20,st:'#C77E2A',sw:2.6}],extra:`<text x='4' y='90' font-size='10' fill='#6B7791' font-family='monospace'>4 cycles in 1 second = 4 Hz</text>`}),
+  pressure:()=>{let dots='';for(let i=0;i<46;i++){const x0=10+i*4.3;const d=6*Math.sin(2*Math.PI*i/12);const x=x0+d;dots+=`<circle cx='${x.toFixed(1)}' cy='48' r='2.4' fill='${Math.cos(2*Math.PI*i/12)>0?'#C77E2A':'#9aa6b8'}'/>`;}
+    return `<svg viewBox='0 0 220 96'>${dots}<text x='28' y='84' font-size='10' fill='#8a521b' font-family='monospace'>compression</text><text x='130' y='84' font-size='10' fill='#6B7791' font-family='monospace'>rarefaction</text></svg>`;},
+  speed:()=>`<svg viewBox='0 0 220 96'>
+    <circle cx='24' cy='48' r='9' fill='#C77E2A'/><text x='10' y='74' font-size='9' fill='#6B7791' font-family='monospace'>source</text>
+    <path d='M36 48 H180' stroke='#9aa6b8' stroke-width='2' stroke-dasharray='4 3'/>
+    <path d='M170 42 l10 6 l-10 6' fill='none' stroke='#9aa6b8' stroke-width='2'/>
+    <rect x='184' y='38' width='18' height='20' rx='3' fill='#1B2A4A'/><text x='176' y='74' font-size='9' fill='#6B7791' font-family='monospace'>listener</text>
+    <text x='66' y='34' font-size='11' fill='#1B2A4A' font-family='monospace'>~343 m/s</text></svg>`,
+  freq:()=>waveSVG({paths:[{n:2,A:16,st:'#9aa6b8',sw:2.2,mid:34},{n:6,A:16,st:'#C77E2A',sw:2.6,mid:70}],H:96,extra:`<text x='150' y='30' font-size='9' fill='#6B7791' font-family='monospace'>low</text><text x='150' y='90' font-size='9' fill='#8a521b' font-family='monospace'>high</text>`}),
+  amp:()=>waveSVG({paths:[{n:3,A:8,st:'#9aa6b8',sw:2.2},{n:3,A:26,st:'#C77E2A',sw:2.6}],extra:`<text x='150' y='16' font-size='9' fill='#8a521b' font-family='monospace'>louder</text>`}),
+  wavelength:()=>waveSVG({paths:[{n:2,A:20,st:'#C77E2A',sw:2.6}],extra:`<line x1='0' y1='78' x2='110' y2='78' stroke='#3E9C92' stroke-width='2'/><path d='M0 74 v8 M110 74 v8' stroke='#3E9C92' stroke-width='2'/><text x='30' y='92' font-size='10' fill='#22685f' font-family='monospace'>one wavelength</text>`}),
+  phase:()=>waveSVG({paths:[{n:2,A:14,st:'#C77E2A',sw:2.4,mid:30},{n:2,A:14,ph:Math.PI,st:'#3E9C92',sw:2.4,mid:30},{n:2,A:1,st:'#1B2A4A',sw:2.8,mid:74}],extra:`<text x='150' y='70' font-size='9' fill='#6B7791' font-family='monospace'>sum = flat</text>`}),
+  reflection:()=>`<svg viewBox='0 0 220 96'><rect x='196' y='8' width='8' height='80' fill='#1B2A4A'/><circle cx='28' cy='30' r='6' fill='#C77E2A'/><path d='M34 32 L196 64' stroke='#C77E2A' stroke-width='2.4'/><path d='M196 64 L60 86' stroke='#3E9C92' stroke-width='2.4'/><path d='M188 58 l8 6 l-8 6' fill='none' stroke='#1B2A4A' stroke-width='1.6'/><text x='100' y='30' font-size='9' fill='#6B7791' font-family='monospace'>angle in = angle out</text></svg>`,
+  absorption:()=>`<svg viewBox='0 0 220 96'><rect x='190' y='8' width='14' height='80' fill='#6B7791'/>${[0,1,2,3,4].map(i=>`<path d='M192 ${16+i*16} h10' stroke='#fff' stroke-width='1'/>`).join('')}<circle cx='28' cy='48' r='6' fill='#C77E2A'/><path d='M34 48 L190 48' stroke='#C77E2A' stroke-width='2.6'/><path d='M178 48 L190 48' stroke='#9aa6b8' stroke-width='2.6' stroke-dasharray='3 3'/><text x='150' y='40' font-size='9' fill='#6B7791' font-family='monospace'>absorbed</text></svg>`,
+  diffusion:()=>`<svg viewBox='0 0 220 96'><path d='M190 8 l0 80 M190 14 l-10 4 l10 4 M190 30 l-12 4 l12 4 M190 46 l-9 4 l9 4 M190 62 l-12 4 l12 4 M190 78 l-9 3 l9 3' stroke='#1B2A4A' stroke-width='2' fill='none'/><circle cx='28' cy='48' r='6' fill='#C77E2A'/><path d='M34 48 L182 48' stroke='#C77E2A' stroke-width='2.6'/><path d='M182 48 L120 18 M182 48 L130 80 M182 48 L110 48 M182 48 L140 30' stroke='#3E9C92' stroke-width='2'/></svg>`,
+  diffraction:()=>`<svg viewBox='0 0 220 96'><rect x='150' y='44' width='10' height='44' rx='3' fill='#1B2A4A'/><text x='128' y='20' font-size='9' fill='#8a521b' font-family='monospace'>low freq bends</text>${[0,1,2].map(i=>`<line x1='${30+i*16}' y1='20' x2='${30+i*16}' y2='76' stroke='#C77E2A' stroke-width='2.4'/>`).join('')}<path d='M96 30 q40 -6 60 18' stroke='#C77E2A' stroke-width='2' fill='none' stroke-dasharray='5 3'/><path d='M96 66 q30 14 70 16' stroke='#3E9C92' stroke-width='2' fill='none' stroke-dasharray='4 3'/><text x='118' y='92' font-size='9' fill='#22685f' font-family='monospace'>high freq blocked</text></svg>`
+};
+
+/* ============ data ============ */
+const G={basics:'Basics',prop:'Properties of a sound wave',room:'In a physical space'};
+const C=[
+ {id:'hearing',name:'Range of human hearing',group:'basics',short:'About 20 Hz to 20 kHz \u2014 and it shrinks with age.',
+  defn:'A healthy young person hears roughly <b>20 Hz to 20,000 Hz (20 kHz)</b>. The top end falls with age and noise exposure, so many adults top out around 15\u201316 kHz. Below 20 Hz is infrasound (felt more than heard); above 20 kHz is ultrasound. We are most sensitive around <b>2\u20135 kHz</b> \u2014 the \u201cpresence\u201d range that reads as clarity and intelligibility.',
+  why:'This range is the canvas for everything: frequency-response graphs are drawn across it, and every EQ, mic, and mixing decision references where energy sits within it.',lab:'hearing'},
+ {id:'hertz',name:'Hertz (Hz)',group:'basics',short:'Cycles per second \u2014 the unit of frequency, heard as pitch.',
+  defn:'One hertz is <b>one full pressure cycle per second</b>. For sound, frequency is heard as <b>pitch</b>: more cycles per second = higher pitch. A440 (440 Hz) is the standard tuning pitch, and <b>doubling the frequency raises pitch by one octave</b>. 1 kHz = 1,000 Hz.',
+  why:'It is the language of pitch and of the whole toolkit \u2014 EQ bands, crossover points, sample rates, and tuning are all spoken in Hz.',lab:'tone'},
+ {id:'pressure',name:'Pressure wave',group:'basics',short:'Sound is moving zones of high and low air pressure.',
+  defn:'Sound is a <b>longitudinal pressure wave</b> traveling through a medium (usually air). The molecules don\u2019t travel with the wave \u2014 they oscillate in place and pass the energy along. <b>Compression</b> = molecules bunched, higher pressure. <b>Rarefaction</b> = molecules spread apart, lower pressure. A speaker pushes and pulls the air; your eardrum reads the resulting pressure swings.',
+  why:'This is literally what a microphone transduces \u2014 pressure variations. \u201cSound pressure level\u201d (SPL) measures how strong those swings are.',lab:'pressure'},
+
+ {id:'speed',name:'Speed',group:'prop',short:'~343 m/s in air \u2014 the same for every pitch.',
+  defn:'Sound travels about <b>343 m/s (\u22481,125 ft/s)</b> in room-temperature air \u2014 faster when warmer, much faster in water and solids. Crucially it is <b>the same speed for every audible frequency</b>, so a high note and a low note played together reach you together.',
+  why:'Speed sets delay times and wavelengths. Distance \u00f7 speed = time, which is why you time-align delay speakers and why reflections comb-filter. Rule of thumb: sound travels about <b>1 foot per millisecond</b>.',formula:'time = distance \u00f7 speed'},
+ {id:'freq',name:'Frequency',group:'prop',short:'Cycles per second \u2014 perceived as pitch.',
+  defn:'The number of pressure cycles per second, in <b>Hz</b>, heard as <b>pitch</b>. It is the inverse of the period (T = 1 \u00f7 f) and tied to wavelength. Bass lives in the low frequencies; air and sparkle live up top.',
+  why:'Pitch, EQ moves, and the entire spectral picture of a mix are all frequency.',formula:'T = 1 \u00f7 f',lab:'tone'},
+ {id:'amp',name:'Amplitude',group:'prop',short:'How big the pressure swing is \u2014 perceived as loudness.',
+  defn:'The <b>size of the pressure change</b> \u2014 how far the wave departs from rest. Bigger amplitude = louder (more SPL). It is <b>independent of frequency</b>: you can have a loud low note or a quiet high one. Loudness perception is non-linear (hence decibels) and frequency-dependent (we hear midrange more easily than the extremes).',
+  why:'Levels, gain staging, dynamics, and headroom are all amplitude.',lab:'tone'},
+ {id:'wavelength',name:'Wavelength',group:'prop',short:'The physical length of one cycle \u2014 long for bass, tiny for treble.',
+  defn:'The <b>physical length of one cycle in space</b>. Low frequencies are long (20 Hz \u2248 <b>17 m / 56 ft</b>); high frequencies are short (20 kHz \u2248 <b>1.7 cm</b>). Wavelength = speed \u00f7 frequency.',
+  why:'It explains why bass is hard to control and needs big or distant treatment, why bass feels omnidirectional, and why highs are directional and easily blocked \u2014 the same physics behind a mic\u2019s off-axis behavior.',formula:'\u03bb = speed \u00f7 frequency'},
+ {id:'phase',name:'Phase',group:'prop',short:'Where a wave is in its cycle \u2014 the silent killer when waves combine.',
+  defn:'<b>Where a wave is in its cycle</b>, measured in degrees (0\u2013360\u00b0). Combine two waves and they interfere: in phase, the peaks line up and reinforce (<b>constructive</b>, louder); 180\u00b0 out of phase with equal amplitude, they <b>cancel</b> to silence (<b>destructive</b>). Partial cancellation across the spectrum is comb filtering \u2014 a thin, hollow sound.',
+  why:'It is the silent killer of mixes \u2014 thin tone, vanishing bass in mono. Multiple mics on one source (the 3:1 rule), reflections, and stereo-to-mono summing are all phase management.',lab:'phase'},
+
+ {id:'reflection',name:'Reflection',group:'room',short:'Sound bounces off hard surfaces \u2014 angle in = angle out.',
+  defn:'Sound <b>bounces off hard, rigid surfaces</b> like light off a mirror: the angle of incidence equals the angle of reflection. Reflections build echoes, reverb, and standing waves; strong early reflections near a mic or listening spot cause comb filtering and smear.',
+  why:'Reflections are the room\u2019s sound. First-reflection points are exactly where you treat a control room or a recording space.'},
+ {id:'absorption',name:'Absorption',group:'room',short:'Soft, porous material turns sound into heat.',
+  defn:'Soft, porous materials \u2014 foam, fiberglass, heavy curtains, even people \u2014 <b>convert sound energy into a tiny amount of heat</b>, reducing reflections. It is frequency-dependent: thin absorbers tame highs but not lows, so bass needs thick, dense traps. Overdo it and the room goes dead and lifeless.',
+  why:'Absorption tames a too-live room, controls reverb, and kills problem reflections \u2014 best used in balance with diffusion.'},
+ {id:'diffusion',name:'Diffusion',group:'room',short:'Uneven surfaces scatter sound instead of bouncing it straight back.',
+  defn:'Irregular or scattering surfaces \u2014 purpose-built diffusers, bookshelves, broken-up geometry \u2014 <b>scatter reflections in many directions</b> instead of one. That breaks up harsh reflections and flutter echo while <b>keeping the energy in the room</b>, so it stays alive rather than dead.',
+  why:'It is the complement to absorption: a good-sounding room usually blends both \u2014 absorb the problems, diffuse the rest.'},
+ {id:'diffraction',name:'Diffraction',group:'room',short:'Sound bends around obstacles \u2014 bass far more than treble.',
+  defn:'Sound <b>bends around obstacles and through openings</b>, most strongly when the object is small relative to the wavelength. Long-wavelength <b>lows bend around things readily</b>; short-wavelength <b>highs get blocked and shadowed</b>.',
+  why:'It is why you hear the bass from a party around the corner but not the cymbals, why barriers do little for bass, and why a mic\u2019s body shapes its off-axis (high-frequency) response.'}
+];
+const byId=Object.fromEntries(C.map(c=>[c.id,c]));
+const TOTAL=C.length;
+
+/* ============ progress ============ */
+const KEY='ue_fundamentals_v1';
+let store={mastered:{},quizBest:0};
+try{const s=localStorage.getItem(KEY);if(s)store=Object.assign(store,JSON.parse(s));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+function masteredCount(){return C.filter(c=>(store.mastered[c.id]||0)>=2).length;}
+function refreshProgress(){const m=masteredCount();const b=document.querySelector('#prog b');if(b)b.innerHTML='<span id="pm">'+m+'</span>/'+TOTAL;const bar=document.getElementById('pbar');if(bar)bar.style.width=(100*m/TOTAL)+'%';}
+
+/* ============ helpers ============ */
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const x in a){if(x==='class')e.className=a[x];else if(x==='html')e.innerHTML=a[x];else e.setAttribute(x,a[x]);}k.flat().forEach(c=>e.append(c));return e;};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const groupChip=g=>el('span',{class:'chip '+g},G[g].toUpperCase());
+
+/* ============ audio engine (offline Web Audio) ============ */
+let actx=null,current=null;
+function ctx(){if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return actx;}
+function stopAudio(){if(current&&actx){try{const t=actx.currentTime;current.gain.gain.cancelScheduledValues(t);current.gain.gain.setTargetAtTime(0,t,0.02);const o=current.osc;setTimeout(()=>{try{o.stop();}catch(e){}},120);}catch(e){}}current=null;}
+function playSine(f,g){const c=ctx();if(!c)return;if(c.state==='suspended')c.resume();stopAudio();try{const osc=c.createOscillator(),gain=c.createGain();osc.type='sine';osc.frequency.value=f;gain.gain.value=0;osc.connect(gain).connect(c.destination);osc.start();gain.gain.setTargetAtTime(Math.min(g,0.18),c.currentTime,0.02);current={osc,gain};}catch(e){}}
+function updateSine(f,g){if(!current||!actx)return;const t=actx.currentTime;if(f!=null)current.osc.frequency.setTargetAtTime(f,t,0.012);if(g!=null)current.gain.gain.setTargetAtTime(Math.min(g,0.18),t,0.012);}
+const sliderToFreq=v=>20*Math.pow(1000,v/100);
+const freqToSlider=f=>100*Math.log(f/20)/Math.log(1000);
+const fmtHz=f=>f>=1000?(f/1000).toFixed(f<10000?2:1)+' kHz':Math.round(f)+' Hz';
+
+/* ============ animation registry ============ */
+let anims=[];
+function animate(fn){let id;function loop(t){fn(t);id=requestAnimationFrame(loop);}id=requestAnimationFrame(loop);const h={cancel(){cancelAnimationFrame(id);}};anims.push(h);return h;}
+function clearAnims(){anims.forEach(h=>h.cancel());anims=[];}
+function ready(cv,ctx){const dpr=window.devicePixelRatio||1;const w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}ctx.setTransform(dpr,0,0,dpr,0,0);}
+function grid(c,w,h){c.strokeStyle='rgba(255,255,255,0.06)';c.lineWidth=1;for(let x=0;x<=w;x+=w/8){c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke();}for(let y=0;y<=h;y+=h/4){c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();}c.strokeStyle='rgba(255,255,255,0.18)';c.beginPath();c.moveTo(0,h/2);c.lineTo(w,h/2);c.stroke();}
+
+/* ============ views ============ */
+const view=document.getElementById('view');
+
+function renderHowto(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(
+    el('div',{class:'eyebrow'},'A method for studying on your own'),
+    el('h1',{class:'page'},'You can\u2019t read your way to this. You have to hear it.'),
+    el('p',{class:'lead'},'These are not facts to memorize \u2014 they are things that happen to air. The fastest way to actually understand frequency, the limits of your hearing, or how two waves can cancel into silence is to make them happen and listen. Put on headphones; that is half the assignment.'));
+  const steps=[
+    ['Learn the idea','Read each concept\u2019s short explanation and the \u201cwhy it matters in the studio.\u201d Tap any card for the full detail and a diagram. Don\u2019t aim to memorize yet \u2014 aim to picture it.'],
+    ['Hear it in the Lab','This is the part reading can\u2019t give you. Tune a tone and hear pitch and loudness; sweep to the edge of your own hearing; slide two waves out of phase and listen to them cancel. Spend real time here.'],
+    ['Lock it in with flashcards','Now make it stick. Recall each concept cold \u2014 the definition, the relationship, and one place it shows up on a session. Two clean passes marks it mastered.'],
+    ['Test the connections','The quiz mixes definitions with the reasoning that links them: wavelength to frequency, phase to cancellation, which room treatment does what.']
+  ];
+  const wrap=el('div',{class:'steps'});
+  steps.forEach(s=>wrap.append(el('div',{class:'step'},el('div',{class:'n'}),el('div',{},el('h3',{},s[0]),el('p',{},s[1])))));
+  view.append(wrap);
+  view.append(el('div',{class:'callout',html:'<b>The assigned reading:</b> work through the SFU sound tutorial \u2014 <a href="https://www.sfu.ca/sonic-studio-webdav/cmns/Handbook%20Tutorial/Vibration1.html" target="_blank" rel="noopener">sfu.ca sonic studio handbook</a> (also on Blackboard). It is meant to be a struggle; the point is to try, listen to its examples, and bring specific questions. Use this tool\u2019s Lab to make its ideas concrete.'}));
+  view.append(el('div',{style:'text-align:center;margin-top:6px'},el('button',{class:'btn gold'},'Start with the Lab \u2192')));
+  view.querySelector('.btn.gold').onclick=()=>setTab('lab');
+}
+
+function openDetail(c){
+  const p=document.getElementById('panel');p.innerHTML='';
+  const head=el('div',{class:'head'},
+    el('div',{class:'art',html:VIZ[c.id]()}),
+    el('div',{},el('h2',{},c.name),el('div',{class:'sub'},G[c.group])),
+    el('button',{class:'x','aria-label':'Close'},'\u00d7'));
+  head.querySelector('.x').onclick=closeDetail;
+  const body=el('div',{class:'body'});
+  body.append(el('p',{html:c.defn}));
+  if(c.formula)body.append(el('div',{class:'formula',html:c.formula.replace(/(\u03bb|time|T)/,'<b>$1</b>')}));
+  body.append(el('div',{class:'note why',html:'<b>Why it matters \u2014 </b>'+c.why}));
+  if(c.lab){const b=el('button',{class:'btn gold sm',style:'margin-top:14px'},'\u25b6 Hear it in the Lab');b.onclick=()=>{closeDetail();setTab('lab');setTimeout(()=>{const t=document.getElementById('st-'+c.lab);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});},120);};body.append(b);}
+  p.append(head,body);document.getElementById('overlay').classList.add('on');
+}
+function closeDetail(){document.getElementById('overlay').classList.remove('on');}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeDetail();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+
+function renderLearn(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'12 concepts'),el('h1',{class:'page'},'Learn'),
+    el('p',{class:'lead'},'Tap any concept for the full explanation, a diagram, and where it shows up on a real session. Ones you can hear have a Lab link.'));
+  ['basics','prop','room'].forEach(g=>{
+    view.append(el('div',{class:'grouphead'},G[g]));
+    const grid=el('div',{class:'grid'});
+    C.filter(c=>c.group===g).forEach(c=>{
+      const card=el('div',{class:'ccard',tabindex:'0',role:'button'},
+        el('div',{class:'art',html:VIZ[c.id]()}),el('h3',{},c.name),el('p',{},c.short));
+      card.onclick=()=>openDetail(c);
+      card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openDetail(c);}};
+      grid.append(card);
+    });
+    view.append(grid);
+  });
+}
+
+/* ============ LAB ============ */
+function station(id,title,sub){return el('div',{class:'station',id:'st-'+id},el('h3',{},title),el('div',{class:'ssub'},sub));}
+function ctlRow(label,input,valEl){return el('div',{class:'ctl'},el('label',{},label),input,valEl);}
+
+function renderLab(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Hear it \u00b7 use headphones'),el('h1',{class:'page'},'Lab'),
+    el('p',{class:'lead'},'Real, generated sound \u2014 nothing pre-recorded. Start each one at a low volume. The point is to connect what you see on the scope to what you hear.'));
+
+  /* ---- Tone Lab ---- */
+  const tone=station('tone','Tone Lab','Tune frequency and level. Hear pitch vs. loudness, and watch the wave stretch and grow.');
+  const tcv=el('canvas');const tscope=el('div',{class:'scope'},tcv);
+  let tFreqV=freqToSlider(220),tLvlV=45,tPlaying=false;
+  const tFreqIn=el('input',{type:'range',min:'0',max:'100',step:'0.1',value:tFreqV});
+  const tFreqVal=el('div',{class:'val'},fmtHz(sliderToFreq(tFreqV)));
+  const tLvlIn=el('input',{type:'range',min:'0',max:'100',value:tLvlV});
+  const tLvlVal=el('div',{class:'val'},tLvlV+'%');
+  const tBtn=el('button',{class:'btn gold'},'\u25b6 Play tone');
+  tone.append(tscope,ctlRow('Frequency',tFreqIn,tFreqVal),ctlRow('Level',tLvlIn,tLvlVal),
+    el('div',{class:'lab-actions'},tBtn,el('div',{class:'readout',html:'low slider = bass \u00b7 high slider = treble'})),
+    el('div',{class:'tip',html:'<b>Notice:</b> raising frequency raises pitch and packs more cycles on the scope; raising level makes it louder and taller, but the pitch doesn\u2019t change.'}));
+  view.append(tone);
+  const gain=()=>(tLvlV/100)*0.16;
+  tFreqIn.oninput=()=>{tFreqV=+tFreqIn.value;const f=sliderToFreq(tFreqV);tFreqVal.textContent=fmtHz(f);if(tPlaying)updateSine(f,gain());};
+  tLvlIn.oninput=()=>{tLvlV=+tLvlIn.value;tLvlVal.textContent=tLvlV+'%';if(tPlaying)updateSine(null,gain());};
+  tBtn.onclick=()=>{if(tPlaying){stopAudio();tPlaying=false;tBtn.textContent='\u25b6 Play tone';tBtn.classList.remove('primary');tBtn.classList.add('gold');}else{playSine(sliderToFreq(tFreqV),gain());tPlaying=true;tBtn.textContent='\u25a0 Stop';tBtn.classList.remove('gold');tBtn.classList.add('primary');}};
+  const tctx=tcv.getContext("2d");
+  animate(t=>{ready(tcv,tctx);const w=tcv.clientWidth,h=tcv.clientHeight;tctx.clearRect(0,0,w,h);grid(tctx,w,h);
+    const f=sliderToFreq(tFreqV);const cyc=Math.min(40,Math.max(1,f/40));const amp=(tLvlV/100)*(h*0.4)+4;
+    const ph=t/1000*6;tctx.strokeStyle='#E0A458';tctx.lineWidth=2.4;tctx.beginPath();
+    for(let i=0;i<=w;i++){const y=h/2-amp*Math.sin(2*Math.PI*cyc*i/w+ph);i?tctx.lineTo(i,y):tctx.moveTo(i,y);}tctx.stroke();});
+
+  /* ---- Hearing Range ---- */
+  const hr=station('hearing','Hearing Range','Slide up toward 20 kHz and find where the tone disappears for you \u2014 that\u2019s your personal ceiling.');
+  const hcv=el('canvas');const hscope=el('div',{class:'scope'},hcv);
+  let hFreqV=freqToSlider(1000),hPlaying=false,sweep=false,sweepDir=1;
+  const hIn=el('input',{type:'range',min:'0',max:'100',step:'0.1',value:hFreqV});
+  const hVal=el('div',{class:'val'},fmtHz(sliderToFreq(hFreqV)));
+  const hBtn=el('button',{class:'btn gold'},'\u25b6 Play');
+  const hSweep=el('button',{class:'btn ghost sm'},'Sweep up');
+  const presets=el('div',{class:'presets'});
+  [1000,8000,12000,15000,17000,19000].forEach(f=>{const b=el('button',{class:'btn ghost sm'},fmtHz(f));b.onclick=()=>{hFreqV=freqToSlider(f);hIn.value=hFreqV;hVal.textContent=fmtHz(f);if(!hPlaying)startH();else updateSine(f,0.12);};presets.append(b);});
+  hr.append(hscope,ctlRow('Frequency',hIn,hVal),el('div',{class:'lab-actions'},hBtn,hSweep,presets),
+    el('div',{class:'notice',html:'Most adults lose the top octave (15\u201320 kHz) earlier than they expect \u2014 that\u2019s normal hearing aging, not a broken speaker. Keep the level modest up high.'}));
+  view.append(hr);
+  function startH(){playSine(sliderToFreq(hFreqV),0.12);hPlaying=true;hBtn.textContent='\u25a0 Stop';hBtn.classList.replace('gold','primary');}
+  function stopH(){stopAudio();hPlaying=false;sweep=false;hBtn.textContent='\u25b6 Play';hBtn.classList.replace('primary','gold');}
+  hIn.oninput=()=>{hFreqV=+hIn.value;hVal.textContent=fmtHz(sliderToFreq(hFreqV));if(hPlaying)updateSine(sliderToFreq(hFreqV),0.12);};
+  hBtn.onclick=()=>{hPlaying?stopH():startH();};
+  hSweep.onclick=()=>{if(!hPlaying)startH();sweep=true;sweepDir=1;};
+  const hctx=hcv.getContext("2d");
+  animate(t=>{ready(hcv,hctx);if(sweep){hFreqV+=sweepDir*0.18;if(hFreqV>=100){hFreqV=100;sweep=false;}hIn.value=hFreqV;const f=sliderToFreq(hFreqV);hVal.textContent=fmtHz(f);if(hPlaying)updateSine(f,0.12);}
+    const w=hcv.clientWidth,h=hcv.clientHeight;hctx.clearRect(0,0,w,h);
+    // log scale bar
+    hctx.fillStyle='rgba(255,255,255,0.08)';hctx.fillRect(0,h/2-3,w,6);
+    const x=w*hFreqV/100;hctx.strokeStyle='#3E9C92';hctx.lineWidth=2;hctx.beginPath();hctx.moveTo(x,18);hctx.lineTo(x,h-18);hctx.stroke();
+    hctx.fillStyle='#E0A458';hctx.beginPath();hctx.arc(x,h/2,7,0,7);hctx.fill();
+    hctx.fillStyle='rgba(255,255,255,0.5)';hctx.font='11px monospace';hctx.fillText('20 Hz',4,h-6);hctx.fillText('20 kHz',w-52,h-6);
+    hctx.fillStyle='#E0A458';hctx.font='13px monospace';hctx.fillText(fmtHz(sliderToFreq(hFreqV)),x-18,14);});
+
+  /* ---- Phase ---- */
+  const ph=station('phase','Phase & Interference','Two identical tones. Slide one out of phase and listen: at 180\u00b0 they cancel to near silence.');
+  const pcv=el('canvas');const pscope=el('div',{class:'scope'},pcv);
+  let phaseDeg=0,pPlaying=false;const pFreq=220;
+  const pIn=el('input',{type:'range',min:'0',max:'360',value:'0'});
+  const pVal=el('div',{class:'val'},'0\u00b0');
+  const pBtn=el('button',{class:'btn gold'},'\u25b6 Play both');
+  const pRead=el('div',{class:'readout',html:'Combined level: <b>100%</b>'});
+  ph.append(pscope,ctlRow('Phase shift',pIn,pVal),el('div',{class:'lab-actions'},pBtn,pRead),
+    el('div',{class:'tip',html:'<b>Notice:</b> at 0\u00b0 the two waves reinforce (loud); at 180\u00b0 they sum to a flat line and the sound nearly vanishes. This is exactly what happens when two mics catch the same source at different distances.'}));
+  view.append(ph);
+  const sumAmp=()=>Math.abs(Math.cos(phaseDeg*Math.PI/360));
+  function pGain(){return 0.14*sumAmp();}
+  pIn.oninput=()=>{phaseDeg=+pIn.value;pVal.textContent=phaseDeg+'\u00b0';pRead.innerHTML='Combined level: <b>'+Math.round(sumAmp()*100)+'%</b>';if(pPlaying)updateSine(null,pGain());};
+  pBtn.onclick=()=>{if(pPlaying){stopAudio();pPlaying=false;pBtn.textContent='\u25b6 Play both';pBtn.classList.replace('primary','gold');}else{playSine(pFreq,pGain());pPlaying=true;pBtn.textContent='\u25a0 Stop';pBtn.classList.replace('gold','primary');}};
+  const pctx=pcv.getContext("2d");
+  animate(t=>{ready(pcv,pctx);const w=pcv.clientWidth,h=pcv.clientHeight;pctx.clearRect(0,0,w,h);grid(pctx,w,h);
+    const cyc=3,base=t/1000*4,rad=phaseDeg*Math.PI/180,A=h*0.16;
+    const drawW=(off,col,amp,lw)=>{pctx.strokeStyle=col;pctx.lineWidth=lw;pctx.beginPath();for(let i=0;i<=w;i++){const y=h*0.3-amp*Math.sin(2*Math.PI*cyc*i/w+base+off);i?pctx.lineTo(i,y):pctx.moveTo(i,y);}pctx.stroke();};
+    drawW(0,'#C77E2A',A,2);drawW(rad,'#3E9C92',A,2);
+    // sum
+    pctx.strokeStyle='#fff';pctx.lineWidth=2.6;pctx.beginPath();for(let i=0;i<=w;i++){const s=Math.sin(2*Math.PI*cyc*i/w+base)+Math.sin(2*Math.PI*cyc*i/w+base+rad);const y=h*0.72-s*A;i?pctx.lineTo(i,y):pctx.moveTo(i,y);}pctx.stroke();
+    pctx.fillStyle='rgba(255,255,255,0.45)';pctx.font='11px monospace';pctx.fillText('wave A + wave B',8,h*0.72-A-8);});
+
+  /* ---- Pressure wave ---- */
+  const pw=station('pressure','Pressure Wave','Watch the air itself: molecules bunch into compressions and spread into rarefactions as the wave passes.');
+  const wcv=el('canvas');const wscope=el('div',{class:'scope'},wcv);
+  let pwPlaying=true;const pwBtn=el('button',{class:'btn ghost sm'},'\u275a\u275a Pause');
+  const pwTone=el('label',{style:'font-size:13px;color:var(--body);display:inline-flex;align-items:center;gap:7px'},(()=>{const c=el('input',{type:'checkbox'});c.onchange=()=>{if(c.checked)playSine(70,0.06);else stopAudio();};return c;})(),'add a low 70 Hz tone');
+  pw.append(wscope,el('div',{class:'lab-actions'},pwBtn,pwTone),
+    el('div',{class:'tip',html:'<b>Notice:</b> no dot travels across the screen \u2014 each one just oscillates in place and passes the energy along. That moving pattern of pressure <i>is</i> the sound, and it\u2019s what a microphone converts to electricity.'}));
+  view.append(pw);
+  pwBtn.onclick=()=>{pwPlaying=!pwPlaying;pwBtn.textContent=pwPlaying?'\u275a\u275a Pause':'\u25b6 Play';};
+  const wctx=wcv.getContext("2d");let pwT=0;
+  const cols=44,rows=5;
+  animate(()=>{ready(wcv,wctx);if(pwPlaying)pwT+=0.04;const w=wcv.clientWidth,h=wcv.clientHeight;wctx.clearRect(0,0,w,h);
+    const k=2*Math.PI/(w/2.2);
+    for(let r=0;r<rows;r++){const cy=h*(r+0.5)/rows;for(let i=0;i<cols;i++){const x0=(i+0.5)*w/cols;const disp=10*Math.sin(k*x0-pwT*4);const x=x0+disp;const comp=Math.cos(k*x0-pwT*4)>0;wctx.fillStyle=comp?'rgba(224,164,88,0.95)':'rgba(154,166,184,0.6)';wctx.beginPath();wctx.arc(x,cy,2.6,0,7);wctx.fill();}}
+    wctx.fillStyle='rgba(255,255,255,0.4)';wctx.font='11px monospace';wctx.fillText('compression (gold) \u00b7 rarefaction (grey)',8,h-8);});
+}
+
+/* ============ flashcards ============ */
+let fcQueue=[];
+function renderCards(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Active recall'),el('h1',{class:'page'},'Flashcards'),
+    el('p',{class:'lead'},'See the concept, and out loud give its definition, one relationship or formula, and one place it shows up on a session. Reveal to check; mark \u201cGot it\u201d only when you had it.'));
+  const t=el('div',{class:'lab-actions'},el('button',{class:'btn ghost sm'},'Restart deck'),el('button',{class:'btn ghost sm'},'Drill the unmastered'));
+  view.append(t,el('div',{id:'fcHost'}));
+  t.children[0].onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};
+  t.children[1].onclick=()=>{const weak=C.filter(c=>(store.mastered[c.id]||0)<2).map(c=>c.id);fcQueue=shuffle(weak.length?weak:C.map(c=>c.id));drawCard();};
+  if(!fcQueue.length)fcQueue=shuffle(C.map(c=>c.id));
+  drawCard();
+}
+function drawCard(){
+  const host=document.getElementById('fcHost');if(!host)return;host.innerHTML='';
+  if(!fcQueue.length){host.append(el('div',{class:'stage'},el('div',{class:'bigscore',html:'\u2713'}),el('p',{class:'prompt'},'Deck complete. '+masteredCount()+' of '+TOTAL+' concepts mastered.'),el('div',{class:'actions'},el('button',{class:'btn primary'},'Go again'))));host.querySelector('.btn').onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};return;}
+  const c=byId[fcQueue[0]],done=TOTAL-fcQueue.length+1;
+  const stage=el('div',{class:'stage'},el('div',{class:'counter'},'Card '+done+' of '+TOTAL+(((store.mastered[c.id]||0)>=2)?' \u00b7 mastered':'')),
+    el('div',{class:'art',html:VIZ[c.id]()}),el('h3',{style:'margin:6px 0 0;font-size:21px'},c.name),
+    el('div',{class:'prompt'},'Define it, give a relationship or formula, and name where it shows up.'),el('div',{id:'fcReveal'}));
+  host.append(stage);
+  const rev=stage.querySelector('#fcReveal');rev.append(el('div',{class:'actions'},el('button',{class:'btn primary'},'Reveal answer')));
+  rev.querySelector('.btn').onclick=()=>showBack(c);
+}
+function showBack(c){
+  const rev=document.getElementById('fcReveal');rev.innerHTML='';
+  const block=el('div',{class:'reveal'},el('p',{html:c.defn}));
+  if(c.formula)block.append(el('div',{class:'formula',html:c.formula}));
+  block.append(el('div',{class:'note why',html:'<b>On a session \u2014 </b>'+c.why}));
+  rev.append(block,el('div',{class:'actions'},el('button',{class:'btn again'},'Review again'),el('button',{class:'btn ok'},'Got it')));
+  const[a,o]=rev.querySelectorAll('.actions .btn');
+  a.onclick=()=>{fcQueue.push(fcQueue.shift());drawCard();};
+  o.onclick=()=>{store.mastered[c.id]=(store.mastered[c.id]||0)+1;save();refreshProgress();fcQueue.shift();drawCard();};
+}
+
+/* ============ quiz ============ */
+const QPOOL=[
+ {q:'The range of human hearing is roughly:',opts:['20 Hz \u2013 20 kHz','2 Hz \u2013 2 kHz','200 Hz \u2013 200 kHz','20 Hz \u2013 2 kHz'],a:'20 Hz \u2013 20 kHz',ex:'About <b>20 Hz to 20 kHz</b> for a healthy young listener \u2014 the top end drops with age.'},
+ {q:'Hertz measures:',opts:['Cycles per second (frequency)','Loudness','Wave length in metres','Speed of sound'],a:'Cycles per second (frequency)',ex:'<b>Frequency</b>, in cycles per second \u2014 perceived as pitch.'},
+ {q:'Doubling a sound\u2019s frequency raises its pitch by:',opts:['One octave','One semitone','A fifth','It gets louder, not higher'],a:'One octave',ex:'<b>An octave.</b> 220 \u2192 440 \u2192 880 Hz are each an octave apart.'},
+ {q:'Molecules bunched together at higher pressure is called:',opts:['Compression','Rarefaction','Diffraction','Amplitude'],a:'Compression',ex:'<b>Compression.</b> The low-pressure, spread-out region is rarefaction.'},
+ {q:'Wavelength equals:',opts:['Speed \u00f7 frequency','Frequency \u00f7 speed','Speed \u00d7 frequency','Frequency \u00d7 amplitude'],a:'Speed \u00f7 frequency',ex:'<b>\u03bb = speed \u00f7 frequency.</b> Low frequencies are long; high frequencies are short.'},
+ {q:'A 20 Hz tone has a wavelength of roughly:',opts:['17 metres (56 ft)','17 centimetres','1.7 metres','1.7 kilometres'],a:'17 metres (56 ft)',ex:'<b>~17 m.</b> 343 m/s \u00f7 20 Hz \u2248 17 m \u2014 why bass is so hard to trap.'},
+ {q:'Two identical waves combined 180\u00b0 out of phase will:',opts:['Cancel toward silence','Double in volume','Shift up an octave','Turn into noise'],a:'Cancel toward silence',ex:'<b>Cancel.</b> Equal-and-opposite pressure swings sum to nothing \u2014 destructive interference.'},
+ {q:'A microphone actually converts which of these into electricity?',opts:['Air-pressure variations','Frequency numbers','Wavelength','Voltage from the air'],a:'Air-pressure variations',ex:'<b>Pressure variations.</b> Sound is a pressure wave; the mic transduces those swings.'},
+ {q:'Soft, porous panels on a wall mainly provide:',opts:['Absorption','Reflection','Diffusion','Diffraction'],a:'Absorption',ex:'<b>Absorption</b> \u2014 they convert sound energy to heat, cutting reflections.'},
+ {q:'Scattering reflections in many directions to keep a room lively is:',opts:['Diffusion','Absorption','Reflection','Cancellation'],a:'Diffusion',ex:'<b>Diffusion.</b> It breaks up harsh reflections while keeping energy in the room.'},
+ {q:'You hear the bass from a party around a corner but not the cymbals. That\u2019s:',opts:['Diffraction','Reflection','Absorption','Phase'],a:'Diffraction',ex:'<b>Diffraction.</b> Long bass wavelengths bend around the corner; short highs are blocked.'},
+ {q:'A high note and a low note played together reach you at the same time because:',opts:['Speed of sound is the same for all frequencies','High notes travel faster','Low notes travel faster','They are the same wavelength'],a:'Speed of sound is the same for all frequencies',ex:'<b>Same speed for every pitch</b> \u2014 otherwise music would arrive scrambled.'},
+ {q:'Amplitude corresponds to a sound\u2019s:',opts:['Loudness (level)','Pitch','Wavelength','Speed'],a:'Loudness (level)',ex:'<b>Loudness.</b> Bigger pressure swing = more SPL, independent of pitch.'},
+ {q:'Hard surface, angle of incidence equals angle of reflection \u2014 that describes:',opts:['Reflection','Diffusion','Absorption','Diffraction'],a:'Reflection',ex:'<b>Reflection</b> \u2014 sound bouncing like light off a mirror.'}
+];
+let quiz={list:[],i:0,score:0,wrong:[]};
+function renderQuiz(){clearAnims();stopAudio();view.innerHTML='';view.append(el('div',{class:'eyebrow'},'Check the connections'),el('h1',{class:'page'},'Quiz'),el('div',{id:'qHost'}));startQuiz();}
+function startQuiz(){quiz={list:shuffle(QPOOL).slice(0,10),i:0,score:0,wrong:[]};drawQ();}
+function drawQ(){
+  const host=document.getElementById('qHost');if(!host)return;host.innerHTML='';
+  if(quiz.i>=quiz.list.length){if(quiz.score>store.quizBest){store.quizBest=quiz.score;save();}
+    const stage=el('div',{class:'stage'},el('div',{class:'bigscore',html:quiz.score+'<span>/'+quiz.list.length+'</span>'}),
+      el('p',{class:'prompt'},quiz.score===quiz.list.length?'Perfect \u2014 you understand how these fit together, not just the words.':quiz.score>=8?'Strong. Clean up the few below and you\u2019ve got it.':'Good start \u2014 revisit these in Learn and the Lab, then run it again.'),
+      el('div',{class:'scorebar'},'Best so far: '+store.quizBest+'/10'));
+    if(quiz.wrong.length){const l=el('div',{class:'explain on',style:'max-width:520px'},el('b',{},'Worth another look: '),quiz.wrong.join('; '));stage.append(l);}
+    stage.append(el('div',{class:'actions'},el('button',{class:'btn primary'},'New quiz'),el('button',{class:'btn ghost'},'Back to the Lab')));
+    host.append(stage);const[a,b]=stage.querySelectorAll('.actions .btn');a.onclick=startQuiz;b.onclick=()=>setTab('lab');return;}
+  const item=quiz.list[quiz.i];
+  const stage=el('div',{class:'stage'});
+  stage.append(el('div',{class:'scorebar'},'Question '+(quiz.i+1)+' of '+quiz.list.length+' \u00b7 Score '+quiz.score));
+  stage.append(el('div',{class:'prompt',style:'font-size:16px;color:var(--ink)'},item.q));
+  const opts=el('div',{class:'opts'});
+  shuffle(item.opts).forEach(o=>{const b=el('button',{class:'opt'},o);b.onclick=()=>answerQ(b,o,item,stage);opts.append(b);});
+  stage.append(opts,el('div',{class:'explain',id:'qEx'}));host.append(stage);
+}
+function answerQ(btn,choice,item,stage){
+  stage.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.textContent===item.a)b.classList.add('correct');});
+  if(choice===item.a)quiz.score++;else{btn.classList.add('wrong');quiz.wrong.push(item.a);}
+  const ex=stage.querySelector('#qEx');ex.innerHTML=item.ex;ex.classList.add('on');
+  const next=el('div',{class:'actions'},el('button',{class:'btn primary'},quiz.i===quiz.list.length-1?'See results':'Next'));
+  ex.after(next);next.querySelector('.btn').onclick=()=>{quiz.i++;drawQ();};
+}
+
+/* ============ tabs ============ */
+const RENDER={howto:renderHowto,learn:renderLearn,lab:renderLab,cards:renderCards,quiz:renderQuiz};
+function setTab(name){document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name));clearAnims();stopAudio();RENDER[name]();window.scrollTo({top:0});}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+refreshProgress();setTab('howto');
+</script>
+</body>
+</html>

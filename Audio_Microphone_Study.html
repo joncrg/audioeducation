@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Microphones — Active Study</title>
+<style>
+  :root{
+    --navy:#14203A; --navy2:#22324F; --ink:#1B2A4A; --gold:#C77E2A; --gold2:#E0A458;
+    --teal:#3E9C92; --paper:#EEF2F8; --card:#FFFFFF; --line:#DCE4EF; --muted:#6B7791;
+    --body:#33405A; --scope:#0E1730;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5}
+  .topbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:12px 22px;gap:16px;box-shadow:0 2px 10px rgba(10,18,35,.25)}
+  .mark{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.16em;font-size:14px;text-transform:uppercase}
+  .mark svg{width:30px;height:30px}
+  .mark small{display:block;letter-spacing:.18em;color:#9fb0cc;font-size:10px;font-weight:600;margin-top:1px}
+  .prog{font-family:var(--mono);font-size:12px;color:#cfdaec;text-align:right;white-space:nowrap}
+  .prog b{color:var(--gold2)}
+  .prog .bar{margin-top:5px;width:130px;height:5px;border-radius:3px;background:#2c3d5c;overflow:hidden}
+  .prog .bar i{display:block;height:100%;width:0;background:var(--gold2);transition:width .4s}
+  .tabs{position:sticky;top:50px;z-index:19;background:var(--card);border-bottom:1px solid var(--line);display:flex;gap:2px;padding:0 14px;overflow-x:auto}
+  .tabs button{appearance:none;border:0;background:none;font-family:var(--sans);font-size:14px;font-weight:600;color:var(--muted);padding:14px 14px 11px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--ink)}
+  .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 20px 70px}
+  h1.page{font-size:25px;margin:.1em 0 .15em;letter-spacing:-.01em}
+  .lead{color:var(--body);max-width:64ch;margin:.2em 0 1.4em}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+  .grouphead{margin:28px 0 12px}
+  .grouphead .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .grouphead .t{font-size:18px;font-weight:700;color:var(--ink);margin-top:2px}
+  .grouphead .d{font-size:13px;color:var(--muted)}
+
+  .art{background:linear-gradient(160deg,#fafbfe,#eef3fa);border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .art svg{width:100%;height:auto;display:block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
+  .ccard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;text-align:left}
+  .ccard:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(20,32,58,.10);border-color:#c6d4e6}
+  .ccard .art{height:96px;margin-bottom:10px;padding:6px}
+  .ccard h3{margin:0;font-size:15px}
+  .ccard p{margin:4px 0 0;color:var(--muted);font-size:12.5px}
+  .tagrow{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:2px 7px;border-radius:20px;background:#eef2f8;color:var(--ink);border:1px solid #e0e7f1}
+  .tag.active{background:#fbeede;color:#9a5a16;border-color:#f3dcc0}
+  .tag.passive{background:#e4f3f0;color:#1f6b62;border-color:#c9e7e1}
+
+  .overlay{position:fixed;inset:0;background:rgba(15,23,40,.55);display:none;z-index:40;padding:24px;overflow:auto}
+  .overlay.on{display:flex;align-items:flex-start;justify-content:center}
+  .panel{background:var(--card);border-radius:16px;max-width:680px;width:100%;margin:auto;overflow:hidden;box-shadow:0 24px 60px rgba(10,18,35,.4)}
+  .panel .head{display:flex;gap:18px;padding:18px 22px;background:linear-gradient(150deg,#fafbfe,#eaf0f9);border-bottom:1px solid var(--line);align-items:center}
+  .panel .head .art{width:190px;min-width:190px;height:104px;padding:6px}
+  .panel .head h2{margin:0 0 2px;font-size:21px}
+  .panel .head .sub{color:var(--muted);font-size:12.5px;font-family:var(--mono)}
+  .panel .body{padding:18px 22px}
+  .panel .body p{margin:0 0 12px;color:var(--body);font-size:14px}
+  .formula{font-family:var(--mono);background:#11203f;color:#dbe7ff;border-radius:8px;padding:9px 13px;display:inline-block;font-size:13.5px;margin:0 0 12px}
+  .formula b{color:var(--gold2)}
+  .note{border-radius:10px;padding:12px 14px;font-size:13.5px}
+  .note.why{background:#eef4f3;border:1px solid #d6e8e4}.note.why b{color:#22685f}
+  .note.comp{background:#f3f6fb;border:1px solid var(--line);margin-bottom:12px}.note.comp b{color:var(--ink)}
+  .x{margin-left:auto;appearance:none;border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;color:var(--muted)}
+  .x:hover{color:var(--ink);border-color:#c6d4e6}
+
+  .btn{appearance:none;border:0;border-radius:10px;font-family:var(--sans);font-weight:650;font-size:14px;padding:11px 18px;cursor:pointer}
+  .btn.primary{background:var(--navy);color:#fff}.btn.primary:hover{background:#1d2c4a}
+  .btn.gold{background:var(--gold);color:#fff}.btn.gold:hover{background:#b06f22}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}.btn.ghost:hover{border-color:#c6d4e6}
+  .btn.ok{background:#e4f3f0;color:#1f6b62;border:1px solid #c9e7e1}
+  .btn.again{background:#fbeede;color:#9a5a16;border:1px solid #f3dcc0}
+  .btn.sm{padding:8px 13px;font-size:13px}
+  .btn.tog{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn.tog[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+  /* spine */
+  .spine{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:20px 0 8px}
+  .col{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;position:relative}
+  .col .io{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .col .son{font-size:17px;font-weight:700;margin:2px 0 6px}
+  .col p{margin:0;font-size:13px;color:var(--body)}
+  .bridge{background:linear-gradient(150deg,#1a2742,#22324f);color:#dbe4f2;border-radius:12px;padding:12px 16px;margin:12px 0 0;font-size:13.5px}
+  .bridge b{color:var(--gold2)}
+  @media (max-width:640px){.spine{grid-template-columns:1fr}}
+
+  .station{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 24px rgba(20,32,58,.05)}
+  .station h3{margin:0 0 2px;font-size:18px}
+  .station .ssub{color:var(--muted);font-size:13px;margin-bottom:13px}
+  .scope{background:var(--scope);border-radius:12px;padding:6px;position:relative}
+  .scope canvas{display:block;width:100%;height:200px}
+  .scope.polar canvas{height:330px}
+  .ctl{display:grid;grid-template-columns:104px 1fr 108px;align-items:center;gap:12px;margin-top:13px}
+  .ctl label{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .ctl .val{font-family:var(--mono);font-size:13px;color:var(--ink);text-align:right}
+  input[type=range]{width:100%;accent-color:var(--gold);height:26px;cursor:pointer}
+  .lab-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .patbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+  .readout{font-family:var(--mono);font-size:13px;color:var(--ink);background:#f3f6fb;border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+  .readout b{color:var(--gold)}
+  .notice{font-size:12.5px;color:var(--muted);background:#fbf6ee;border:1px solid #efe1cb;border-radius:8px;padding:9px 12px;margin-top:13px}
+  .tip{font-size:13.5px;color:var(--body);margin-top:12px}.tip b{color:var(--ink)}
+
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:600px;margin:0 auto;text-align:center;box-shadow:0 8px 24px rgba(20,32,58,.06)}
+  .stage .art{height:150px;padding:10px;margin:0 auto 12px;max-width:340px}
+  .counter{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.05em}
+  .prompt{font-size:15px;color:var(--body);margin:10px auto 16px;max-width:48ch}
+  .reveal{border-top:1px dashed var(--line);margin-top:16px;padding-top:16px;text-align:left}
+  .reveal p{margin:0 0 10px;font-size:14px;color:var(--body)}
+  .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .opts{display:grid;gap:9px;margin:6px auto 0;max-width:520px;text-align:left}
+  .opt{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:13px 15px;font-size:14.5px;font-family:var(--sans);cursor:pointer;color:var(--ink);transition:.1s}
+  .opt:hover:not(:disabled){border-color:#9fb6d6;background:#f7faff}
+  .opt:disabled{cursor:default}
+  .opt.correct{background:#e4f3f0;border-color:#7cc6bb;color:#1c5f57;font-weight:600}
+  .opt.wrong{background:#fbe9e9;border-color:#e3a3a3;color:#9a3a3a}
+  .explain{margin:14px auto 0;max-width:520px;background:#f3f6fb;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13.5px;color:var(--body);text-align:left;display:none}
+  .explain.on{display:block}.explain b{color:var(--ink)}
+  .scorebar{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px}
+  .bigscore{font-size:46px;font-weight:800;color:var(--navy);text-align:center;line-height:1}
+  .bigscore span{color:var(--gold)}
+
+  .steps{counter-reset:s;display:grid;gap:14px;margin:18px 0}
+  .step{display:grid;grid-template-columns:42px 1fr;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .step .n{counter-increment:s;font-family:var(--mono);font-weight:700;color:#fff;background:var(--navy);width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .step .n::before{content:counter(s)}
+  .step h3{margin:0 0 3px;font-size:16px}.step p{margin:0;color:var(--body);font-size:13.5px}
+  footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;padding:22px;font-family:var(--mono);letter-spacing:.04em}
+  @media (max-width:560px){.panel .head{flex-direction:column;align-items:flex-start}.ctl{grid-template-columns:84px 1fr 78px}}
+  @media (prefers-reduced-motion:reduce){.ccard{transition:none}}
+  :focus-visible{outline:3px solid var(--gold2);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="mark">
+    <svg viewBox="0 0 30 30"><circle cx="15" cy="11" r="7" fill="none" stroke="#E0A458" stroke-width="2"/><path d="M15 4 a7 7 0 0 1 0 14" fill="#E0A458" opacity=".5"/><line x1="15" y1="18" x2="15" y2="25" stroke="#E0A458" stroke-width="2"/><line x1="9" y1="25" x2="21" y2="25" stroke="#E0A458" stroke-width="2"/></svg>
+    <div>Microphones<small>Active study · COMM-340</small></div>
+  </div>
+  <div class="prog" id="prog">Mastered <b><span id="pm">0</span>/15</b><div class="bar"><i id="pbar"></i></div></div>
+</div>
+<nav class="tabs" id="tabs" role="tablist">
+  <button role="tab" data-tab="howto" aria-selected="true">How to use this</button>
+  <button role="tab" data-tab="learn" aria-selected="false">Learn</button>
+  <button role="tab" data-tab="lab" aria-selected="false">Lab · hear it</button>
+  <button role="tab" data-tab="cards" aria-selected="false">Flashcards</button>
+  <button role="tab" data-tab="quiz" aria-selected="false">Quiz</button>
+</nav>
+<main class="wrap" id="view"></main>
+<div class="overlay" id="overlay"><div class="panel" id="panel"></div></div>
+<footer>University of Evansville · Audio Engineering &nbsp;•&nbsp; Lecture 2 — Microphones & Their Application</footer>
+
+<script>
+/* ============ polar math (shared) ============ */
+function polarR(p,deg){const t=deg*Math.PI/180;switch(p){
+  case'omni':return 1;
+  case'cardioid':return (1+Math.cos(t))/2;
+  case'super':return 0.37+0.63*Math.cos(t);
+  case'hyper':return 0.25+0.75*Math.cos(t);
+  case'fig8':return Math.cos(t);}return 1;}
+function polarPathSVG(p,cx,cy,R){let d='';for(let a=0;a<=360;a+=4){const m=Math.abs(polarR(p,a));const r=R*m;const x=cx+r*Math.sin(a*Math.PI/180);const y=cy-r*Math.cos(a*Math.PI/180);d+=(a?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}return d+'Z';}
+
+/* ============ small wave helper (for curves) ============ */
+function wpath(W,H,o){const A=o.A??16,n=o.n??3,ph=o.ph??0,mid=o.mid??H/2,sm=o.sm??140,st=o.st||'#C77E2A',sw=o.sw??2.4;let d='';for(let i=0;i<=sm;i++){const x=W*i/sm,y=mid-A*Math.sin(2*Math.PI*(n*i/sm)+ph);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}return `<path d='${d}' fill='none' stroke='${st}' stroke-width='${sw}' stroke-linecap='round'/>`;}
+
+/* ============ concept diagrams ============ */
+const micBody=(x)=>`<rect x='${x}' y='30' width='20' height='44' rx='4' fill='#1B2A4A'/><circle cx='${x+10}' cy='26' r='12' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2'/>`;
+const VIZ={
+ theme:()=>`<svg viewBox='0 0 220 96'><circle cx='60' cy='48' r='20' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='2'/><line x1='60' y1='28' x2='60' y2='68' stroke='#C77E2A' stroke-width='2'/>
+   <text x='96' y='30' font-size='10' fill='#1B2A4A' font-family='monospace'>1 diaphragm</text><text x='96' y='46' font-size='10' fill='#1B2A4A' font-family='monospace'>2 transducer</text><text x='96' y='62' font-size='10' fill='#1B2A4A' font-family='monospace'>3 form factor</text><text x='96' y='78' font-size='10' fill='#1B2A4A' font-family='monospace'>4 polar pattern</text></svg>`,
+ transducer:()=>`<svg viewBox='0 0 220 96'>${wpath(90,96,{n:2,A:14,mid:48,st:'#C77E2A',sw:2.4})}<path d='M96 48 h26' stroke='#9aa6b8' stroke-width='2'/><path d='M116 43 l8 5 l-8 5' fill='none' stroke='#9aa6b8' stroke-width='2'/><rect x='126' y='38' width='30' height='20' rx='3' fill='#1B2A4A'/><text x='128' y='51' font-size='9' fill='#E0A458' font-family='monospace'>capsule</text><path d='M160 48 h24' stroke='#3E9C92' stroke-width='2.6'/><text x='30' y='80' font-size='9' fill='#6B7791' font-family='monospace'>acoustic</text><text x='150' y='80' font-size='9' fill='#22685f' font-family='monospace'>electrical</text></svg>`,
+ diaphragm:()=>`<svg viewBox='0 0 220 96'>${wpath(70,96,{n:3,A:12,mid:48,st:'#C77E2A',sw:2.2})}<path d='M74 48 h12' stroke='#9aa6b8' stroke-width='2'/><path d='M104 18 q-12 30 0 60' fill='none' stroke='#1B2A4A' stroke-width='3'/><path d='M108 18 q-12 30 0 60' fill='none' stroke='#3E9C92' stroke-width='2' stroke-dasharray='4 3'/><text x='120' y='52' font-size='10' fill='#1B2A4A' font-family='monospace'>moving membrane</text></svg>`,
+ dynamic:()=>`<svg viewBox='0 0 220 96'><rect x='150' y='20' width='34' height='56' rx='3' fill='#1B2A4A'/><rect x='156' y='34' width='22' height='28' fill='#C77E2A'/><text x='150' y='90' font-size='9' fill='#8a521b' font-family='monospace'>magnet</text>
+   <path d='M120 24 q-10 24 0 48' fill='none' stroke='#1B2A4A' stroke-width='3'/><text x='96' y='90' font-size='9' fill='#6B7791' font-family='monospace'>diaphragm</text>
+   <ellipse cx='140' cy='48' rx='5' ry='16' fill='none' stroke='#3E9C92' stroke-width='2.4'/><text x='128' y='16' font-size='9' fill='#22685f' font-family='monospace'>coil</text>
+   ${wpath(70,96,{n:2,A:9,mid:48,st:'#9aa6b8',sw:1.8})}</svg>`,
+ ribbon:()=>`<svg viewBox='0 0 220 96'><rect x='96' y='14' width='24' height='30' rx='3' fill='#1B2A4A'/><rect x='96' y='52' width='24' height='30' rx='3' fill='#1B2A4A'/><text x='98' y='32' font-size='9' fill='#fff' font-family='monospace'>N</text><text x='98' y='70' font-size='9' fill='#fff' font-family='monospace'>S</text>
+   <path d='M108 44 l-2 4 l2 4 l-2 4 M108 44 v8 M106 48 h4' stroke='#C77E2A' stroke-width='2' fill='none'/><rect x='106' y='44' width='4' height='8' fill='#C77E2A'/><text x='130' y='52' font-size='10' fill='#1B2A4A' font-family='monospace'>ribbon in field</text>
+   ${wpath(70,96,{n:2,A:9,mid:48,st:'#9aa6b8',sw:1.8})}</svg>`,
+ condenser:()=>`<svg viewBox='0 0 220 96'><path d='M120 18 v60' stroke='#1B2A4A' stroke-width='3'/><path d='M138 18 v60' stroke='#C77E2A' stroke-width='3'/><text x='76' y='90' font-size='9' fill='#6B7791' font-family='monospace'>diaphragm</text><text x='150' y='90' font-size='9' fill='#8a521b' font-family='monospace'>backplate</text>
+   <line x1='120' y1='30' x2='138' y2='30' stroke='#3E9C92' stroke-width='1.4'/><line x1='120' y1='48' x2='138' y2='48' stroke='#3E9C92' stroke-width='1.4'/><line x1='120' y1='66' x2='138' y2='66' stroke='#3E9C92' stroke-width='1.4'/>
+   <rect x='158' y='40' width='40' height='18' rx='3' fill='#1B2A4A'/><text x='162' y='53' font-size='10' fill='#E0A458' font-family='monospace'>+48V</text>${wpath(70,96,{n:3,A:9,mid:48,st:'#9aa6b8',sw:1.8})}</svg>`,
+ freq:()=>`<svg viewBox='0 0 220 96'><line x1='14' y1='70' x2='206' y2='70' stroke='#D7DEEA' stroke-width='1'/><line x1='14' y1='14' x2='14' y2='70' stroke='#D7DEEA' stroke-width='1'/><path d='M14 44 H120 Q150 44 160 30 Q170 22 190 40 L206 46' fill='none' stroke='#C77E2A' stroke-width='2.6'/><text x='150' y='20' font-size='9' fill='#8a521b' font-family='monospace'>presence bump</text><text x='14' y='86' font-size='9' fill='#6B7791' font-family='monospace'>20 Hz \u2192 20 kHz</text></svg>`,
+ polar:()=>`<svg viewBox='0 0 220 96'><g transform='translate(60,48)'><circle r='34' fill='none' stroke='#E7ECF3' stroke-width='1'/><circle r='17' fill='none' stroke='#E7ECF3' stroke-width='1'/><path d='${polarPathSVG('cardioid',0,0,34)}' fill='rgba(199,126,42,0.18)' stroke='#C77E2A' stroke-width='2'/></g><text x='110' y='44' font-size='11' fill='#1B2A4A' font-family='monospace'>cardioid:</text><text x='110' y='60' font-size='10' fill='#6B7791' font-family='monospace'>front yes, rear no</text></svg>`,
+ inverse:()=>`<svg viewBox='0 0 220 96'><rect x='18' y='40' width='12' height='16' rx='2' fill='#1B2A4A'/>${[18,40,68,104].map((r,i)=>`<circle cx='24' cy='48' r='${r}' fill='none' stroke='#C77E2A' stroke-width='1.6' opacity='${0.8-i*0.16}'/>`).join('')}<circle cx='150' cy='48' r='6' fill='#C77E2A'/><text x='70' y='20' font-size='10' fill='#8a521b' font-family='monospace'>2\u00d7 dist = \u22126 dB</text></svg>`,
+ proximity:()=>`<svg viewBox='0 0 220 96'><line x1='14' y1='66' x2='206' y2='66' stroke='#D7DEEA' stroke-width='1'/><path d='M14 50 H206' fill='none' stroke='#9aa6b8' stroke-width='1.8' stroke-dasharray='4 3'/><path d='M14 24 Q40 24 70 40 Q100 54 206 50' fill='none' stroke='#C77E2A' stroke-width='2.6'/><text x='22' y='20' font-size='9' fill='#8a521b' font-family='monospace'>close = bass boost</text><text x='150' y='44' font-size='9' fill='#6B7791' font-family='monospace'>far = flat</text></svg>`,
+ offaxis:()=>`<svg viewBox='0 0 220 96'>${micBody(40)}<path d='M62 26 H150' stroke='#3E9C92' stroke-width='2.4'/><text x='96' y='20' font-size='9' fill='#22685f' font-family='monospace'>on-axis: full</text><path d='M62 40 L150 70' stroke='#C77E2A' stroke-width='2.4' stroke-dasharray='5 3'/><text x='96' y='86' font-size='9' fill='#8a521b' font-family='monospace'>off-axis: dull</text></svg>`,
+ threeone:()=>`<svg viewBox='0 0 220 96'><circle cx='40' cy='30' r='6' fill='#C77E2A'/><circle cx='40' cy='72' r='6' fill='#C77E2A'/><rect x='66' y='25' width='10' height='12' rx='2' fill='#1B2A4A'/><rect x='66' y='67' width='10' height='12' rx='2' fill='#1B2A4A'/><line x1='46' y1='30' x2='66' y2='31' stroke='#3E9C92' stroke-width='2'/><line x1='46' y1='72' x2='66' y2='73' stroke='#3E9C92' stroke-width='2'/><line x1='72' y1='37' x2='72' y2='67' stroke='#C77E2A' stroke-width='2' stroke-dasharray='4 3'/><text x='90' y='44' font-size='10' fill='#1B2A4A' font-family='monospace'>mic gap \u2265 3\u00d7</text><text x='90' y='60' font-size='10' fill='#6B7791' font-family='monospace'>source distance</text></svg>`,
+ stereo:()=>`<svg viewBox='0 0 220 96'><text x='20' y='16' font-size='9' fill='#22685f' font-family='monospace'>coincident (XY)</text><line x1='40' y1='58' x2='58' y2='40' stroke='#1B2A4A' stroke-width='2.6'/><line x1='40' y1='40' x2='58' y2='58' stroke='#3E9C92' stroke-width='2.6'/><text x='128' y='16' font-size='9' fill='#8a521b' font-family='monospace'>spaced (AB)</text><rect x='120' y='44' width='8' height='12' rx='2' fill='#1B2A4A'/><rect x='180' y='44' width='8' height='12' rx='2' fill='#C77E2A'/><line x1='128' y1='50' x2='180' y2='50' stroke='#9aa6b8' stroke-width='1.6' stroke-dasharray='4 3'/></svg>`,
+ phantom:()=>`<svg viewBox='0 0 220 96'><rect x='150' y='30' width='40' height='36' rx='5' fill='#1B2A4A'/><text x='154' y='52' font-size='12' fill='#E0A458' font-family='monospace'>+48V</text><path d='M150 48 H60' stroke='#C77E2A' stroke-width='2.4'/><path d='M70 43 l-8 5 l8 5' fill='none' stroke='#C77E2A' stroke-width='2'/>${micBody(30)}<text x='40' y='88' font-size='9' fill='#6B7791' font-family='monospace'>active mic only</text></svg>`,
+ preamp:()=>`<svg viewBox='0 0 220 96'>${wpath(60,96,{n:4,A:5,mid:48,st:'#9aa6b8',sw:1.8})}<text x='6' y='80' font-size='9' fill='#6B7791' font-family='monospace'>mic level</text><path d='M70 30 L110 48 L70 66 Z' fill='#1B2A4A'/><text x='118' y='30' font-size='9' fill='#8a521b' font-family='monospace'>gain</text>${wpath(80,96,{n:4,A:22,mid:48,st:'#C77E2A',sw:2.6,sm:140})}<g transform='translate(120,0)'></g><text x='150' y='84' font-size='9' fill='#8a521b' font-family='monospace'>line level</text></svg>`
+};
+
+/* ============ data ============ */
+const G={
+ input:{k:'Input · Exposition',t:'What a microphone is',d:'Theme & three variations \u2014 every mic is built from the same four traits.'},
+ proc:{k:'Processing · Development',t:'How it behaves in space',d:'One idea unifies it all: spatial positioning. Distance, angle, and how mics relate to each other.'},
+ bridge:{k:'Bridge',t:'What a mic needs',d:'Not what a mic is \u2014 what it needs to function: power in, signal out.'}
+};
+const C=[
+ {id:'theme',name:'The four traits',group:'input',short:'Every mic = diaphragm + transducer + form factor + polar pattern.',
+  defn:'Whatever the type, every microphone is defined by four things: its <b>diaphragm</b>, its <b>transducer principle</b>, its <b>form factor</b>, and the <b>polar pattern</b> that results from that construction. Each mic type is just a <i>variation</i> on this theme.',
+  why:'It gives you a checklist for sizing up any mic you pick up \u2014 and the polar pattern isn\u2019t bolted on, it emerges from the other three.'},
+ {id:'transducer',name:'Transducer',group:'input',short:'Converts acoustic energy into an electrical signal.',
+  defn:'A transducer converts one form of energy to another. A mic converts <b>acoustic energy</b> (air-pressure changes) into an <b>electrical signal</b>. <i>How</i> it does that conversion \u2014 the transducer principle \u2014 is what separates dynamic, ribbon, and condenser, and it also decides whether a mic is active or passive.',
+  why:'The operating principle is the root cause of nearly every difference between mic types, including whether it needs power.'},
+ {id:'diaphragm',name:'Diaphragm',group:'input',short:'The thin membrane that moves with the sound.',
+  defn:'The <b>diaphragm</b> is the thin membrane that moves with the sound\u2019s pressure changes; its motion is what becomes signal. Large-diaphragm mics (LDC) trade sensitivity and a flattering tone against the speed and accuracy of small-diaphragm mics (SDC).',
+  why:'It\u2019s the first thing the sound touches \u2014 its size and mass shape sensitivity, noise, and high-frequency accuracy.'},
+ {id:'dynamic',name:'Dynamic mic',group:'input',short:'Moving-coil, passive, rugged \u2014 leans cardioid.',
+  defn:'A <b>moving-coil</b> design: a diaphragm attached to a coil that sits in a magnet\u2019s field. Sound moves the coil through the field, generating a current (<b>electrodynamic</b>). It is <b>passive</b> \u2014 it makes its own signal and needs no power. Rugged, handles high SPL, tends toward directional (cardioid) patterns.',
+  comp:'Magnet · Coil · Diaphragm',tag:'passive',
+  why:'The workhorse for loud and live sources \u2014 forgiving, durable, and it needs nothing but a cable.'},
+ {id:'ribbon',name:'Ribbon mic',group:'input',short:'A ribbon in a magnetic field. Naturally figure-8. Fragile.',
+  defn:'A thin corrugated metal <b>ribbon</b> suspended in a strong magnetic field (a U-magnet). The ribbon <i>is</i> the diaphragm; its motion generates current. Its construction makes it naturally <b>figure-8</b>. <b>Passive</b>, very low output, and delicate \u2014 never phantom-power a vintage/passive ribbon, as a fault or hot-patch can stretch or tear it. (Modern <i>active</i> ribbons are the exception and do use +48V.)',
+  comp:'U-magnet · Ribbon diaphragm',tag:'passive',
+  why:'Smooth and dark \u2014 a classic on bright or harsh sources \u2014 but it demands careful handling.'},
+ {id:'condenser',name:'Condenser mic',group:'input',short:'A capacitor capsule. Active \u2014 needs +48V. Detailed.',
+  defn:'A <b>capacitor</b>: a <b>fixed backplate</b> and a <b>moveable front plate</b> (the diaphragm). Sound changes the gap between them, changing capacitance \u2014 and that change becomes the signal. It is <b>active</b>: the capsule must be charged and its electronics powered, so it requires <b>+48V phantom</b>. Sensitive, detailed, fast transients, and often multi-pattern.',
+  comp:'Capacitor · Fixed backplate · Moveable diaphragm',tag:'active',
+  why:'The detail and transient champion \u2014 just always remember it can\u2019t make a sound without phantom power.'},
+ {id:'freq',name:'Frequency response',group:'input',short:'The mic\u2019s tonal fingerprint across the spectrum.',
+  defn:'How evenly a mic captures from <b>20 Hz to 20 kHz</b> \u2014 its tonal fingerprint. \u201cFlat\u201d mics aim for neutral; many have intentional shapes, like a <b>presence boost</b> for vocal clarity. It\u2019s usually published right alongside the polar pattern.',
+  why:'It\u2019s a big reason two mics on the same source sound different \u2014 you choose a mic partly by its curve.'},
+
+ {id:'polar',name:'Polar patterns',group:'proc',short:'How sensitive a mic is to each direction.',
+  defn:'The map of how sensitive a mic is to sound from each direction. <b>Omni</b> hears everything equally; <b>cardioid</b> favors the front and rejects the rear; <b>figure-8</b> takes front and back while rejecting the sides. The pattern <i>emerges</i> from the capsule\u2019s construction (pressure vs. pressure-gradient operation).',
+  why:'Your main tool for control \u2014 you aim a mic\u2019s rejection at the bleed, room, or monitor you don\u2019t want.'},
+ {id:'inverse',name:'Inverse square law',group:'proc',short:'Double the distance, drop about 6 dB.',
+  defn:'Sound level falls with the <b>square of the distance</b>: double the distance and you get a quarter of the power \u2014 about <b>\u22126 dB</b>. It\u2019s the basic propagation rule underneath all distance behavior.',formula:'level \u2193 \u2248 \u22126 dB per doubling of distance',
+  why:'It\u2019s why a small move on a close source swings the level, and why distance itself is a level and room-vs-source control.'},
+ {id:'proximity',name:'Proximity effect',group:'proc',short:'Get close to a directional mic and the bass blooms.',
+  defn:'On <b>directional</b> mics (cardioid, figure-8), moving close <b>boosts the low end</b>. A pure <b>omni</b> mic doesn\u2019t do it at all. It\u2019s a property of pressure-gradient (directional) capsules.',
+  why:'The radio-voice trick and the muddy-vocal trap \u2014 and a useful tell, since <i>no</i> proximity effect is proof a mic is omni.'},
+ {id:'offaxis',name:'Off-axis coloration',group:'proc',short:'Tone changes with the angle of the source, not just distance.',
+  defn:'Position isn\u2019t only distance \u2014 it\u2019s distance <b>and angle</b>. A mic\u2019s tone changes as a source moves off-axis; the highs usually roll off, because a directional capsule\u2019s pattern is frequency-dependent (it gets more directional as frequency rises).',
+  why:'It\u2019s why bleed sounds dull and \u201cwrong,\u201d and why aiming a mic matters as much as placing it.'},
+ {id:'threeone',name:'Three-to-one rule',group:'proc',short:'Keep mics 3\u00d7 farther apart than each is from its source.',
+  defn:'When several mics cover different sources, keep each pair of mics at least <b>three times</b> as far from each other as each mic is from its own source.',formula:'mic-to-mic \u2265 3 \u00d7 mic-to-source',
+  why:'It keeps the bleed quiet enough that phase cancellation \u2014 comb filtering \u2014 between the mics stays inaudible.'},
+ {id:'stereo',name:'Stereo: coincident vs spaced',group:'proc',short:'Width vs. mono-safety \u2014 with phase underneath.',
+  defn:'Two mics build a stereo image. <b>Coincident</b> (e.g., XY) share one point, so sound arrives at both at the same instant \u2014 phase-aligned and mono-safe, with the image coming from level differences. <b>Spaced</b> (AB) sit apart, so arrival-time differences create a wider image but risk problems when summed to mono.',
+  why:'The trade is width against mono-compatibility, and phase is the hidden variable running underneath both.'},
+
+ {id:'phantom',name:'Phantom power (+48V)',group:'bridge',short:'Power sent up the cable to run active mics.',
+  defn:'A <b>+48V DC</b> voltage sent up the same XLR cable to power <b>active</b> mics (condensers). Passive mics (dynamic, ribbon) simply don\u2019t use it. It isn\u2019t a separate topic \u2014 it falls straight out of the transducer principle: an active capsule must be powered. Don\u2019t hot-patch a passive ribbon with it live.',
+  why:'Forget it and a condenser stays silent; misuse it and you can damage a vintage ribbon.'},
+ {id:'preamp',name:'Microphone preamp',group:'bridge',short:'Raises every mic\u2019s weak signal to line level.',
+  defn:'Every mic, of every type, puts out a signal far too weak to use (<b>mic level</b>). The <b>preamp</b> raises it to <b>line level</b> before anything else in the chain can happen. It is <b>universal</b> \u2014 it can\u2019t tell the three mic types apart \u2014 and <b>electrical, not acoustic</b>, which is why it sits in the bridge.',
+  why:'It\u2019s the first gain stage; nothing downstream works until you set it, so gain staging starts here.'}
+];
+const byId=Object.fromEntries(C.map(c=>[c.id,c]));
+const TOTAL=C.length;
+
+/* ============ progress ============ */
+const KEY='ue_microphones_v1';
+let store={mastered:{},quizBest:0};
+try{const s=localStorage.getItem(KEY);if(s)store=Object.assign(store,JSON.parse(s));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+function masteredCount(){return C.filter(c=>(store.mastered[c.id]||0)>=2).length;}
+function refreshProgress(){const m=masteredCount();const b=document.querySelector('#prog b');if(b)b.innerHTML='<span id="pm">'+m+'</span>/'+TOTAL;const bar=document.getElementById('pbar');if(bar)bar.style.width=(100*m/TOTAL)+'%';}
+
+/* ============ helpers ============ */
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const x in a){if(x==='class')e.className=a[x];else if(x==='html')e.innerHTML=a[x];else e.setAttribute(x,a[x]);}k.flat().forEach(c=>e.append(c));return e;};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+/* ============ audio engine (flexible offline graph) ============ */
+let actx=null,chain=null;
+function ctx(){if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return actx;}
+function stopAudio(){if(chain&&actx){try{const t=actx.currentTime;chain.g.gain.cancelScheduledValues(t);chain.g.gain.setTargetAtTime(0,t,0.02);const ss=chain.sources;setTimeout(()=>ss.forEach(s=>{try{s.stop();}catch(e){}}),140);}catch(e){}}chain=null;}
+function startChain(build){const c=ctx();if(!c)return null;if(c.state==='suspended')c.resume();stopAudio();try{const g=c.createGain();g.gain.value=0;g.connect(c.destination);const parts=build(c,g);chain={g,sources:parts.sources,extra:parts.extra||{}};return chain;}catch(e){return null;}}
+function setVol(v){if(chain&&actx)chain.g.gain.setTargetAtTime(Math.max(0,Math.min(v,0.18)),actx.currentTime,0.02);}
+
+/* ============ animation registry (resize-safe) ============ */
+let anims=[];
+function animate(fn){let id;function loop(t){fn(t);id=requestAnimationFrame(loop);}id=requestAnimationFrame(loop);const h={cancel(){cancelAnimationFrame(id);}};anims.push(h);return h;}
+function clearAnims(){anims.forEach(h=>h.cancel());anims=[];}
+function ready(cv,c){const dpr=window.devicePixelRatio||1;const w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}c.setTransform(dpr,0,0,dpr,0,0);}
+
+const view=document.getElementById('view');
+
+/* ============ HOW TO ============ */
+function renderHowto(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'A method \u2014 and the shape of the lecture'),
+    el('h1',{class:'page'},'A microphone lecture built like a sonata.'),
+    el('p',{class:'lead'},'Lecture 2 runs on the signal-flow spine \u2014 Input \u2192 Processing \u2192 Output \u2014 and that maps cleanly onto sonata form. This tool follows the same shape, so studying it reinforces the structure, not just the facts.'));
+  const spine=el('div',{class:'spine'},
+    el('div',{class:'col'},el('div',{class:'io'},'Input'),el('div',{class:'son'},'Exposition'),el('p',{},'Learn what microphones are \u2014 the four shared traits, then dynamic, ribbon, and condenser as variations on them.')),
+    el('div',{class:'col'},el('div',{class:'io'},'Processing'),el('div',{class:'son'},'Development'),el('p',{},'How they behave in space \u2014 everything here is spatial positioning: distance, angle, and how mics relate to each other.')),
+    el('div',{class:'col'},el('div',{class:'io'},'Output'),el('div',{class:'son'},'Recapitulation'),el('p',{},'Hear the principles. The Lab is your hands-on recap \u2014 you don\u2019t get told the ideas, you recognize them by ear.')));
+  view.append(spine);
+  view.append(el('div',{class:'bridge',html:'<b>The bridge \u2014 power in, signal out.</b> Between what a mic <i>is</i> and how it lives in a system sit the two things it <i>needs</i>: phantom power for active mics (power in), and a preamp for every mic (signal out). Universal and electrical, not acoustic.'}));
+  const steps=[
+    ['Learn the structure','Move through the concepts in Learn \u2014 they\u2019re grouped by the spine above. Read each card\u2019s detail and its \u201cwhy it matters on a session.\u201d The active-vs-passive through-line is the thing to hold onto.'],
+    ['Hear it in the Lab','This is the recapitulation. Drag a source around a polar pattern and hear the rear of a cardioid disappear; pull back and hear the inverse-square drop; lean in and hear proximity bloom the bass. Use headphones.'],
+    ['Lock it in with flashcards','Recall each concept cold \u2014 definition, where it sits in the spine, and one place it shows up. Two clean passes marks it mastered.'],
+    ['Test the through-lines','The quiz leans on the connections: active vs passive, which pattern comes from which construction, why the 3:1 rule exists.']
+  ];
+  const wrap=el('div',{class:'steps'});
+  steps.forEach(s=>wrap.append(el('div',{class:'step'},el('div',{class:'n'}),el('div',{},el('h3',{},s[0]),el('p',{},s[1])))));
+  view.append(wrap);
+  view.append(el('div',{style:'text-align:center;margin-top:2px'},el('button',{class:'btn gold'},'Start with the Lab \u2192')));
+  view.querySelector('.btn.gold').onclick=()=>setTab('lab');
+}
+
+/* ============ LEARN ============ */
+function openDetail(c){
+  const p=document.getElementById('panel');p.innerHTML='';
+  const head=el('div',{class:'head'},el('div',{class:'art',html:VIZ[c.id]()}),
+    el('div',{},el('h2',{},c.name),el('div',{class:'sub'},G[c.group].k)),
+    el('button',{class:'x','aria-label':'Close'},'\u00d7'));
+  head.querySelector('.x').onclick=closeDetail;
+  const body=el('div',{class:'body'});
+  body.append(el('p',{html:c.defn}));
+  if(c.comp)body.append(el('div',{class:'note comp',html:'<b>Components \u2014 </b>'+c.comp+(c.tag?'  \u00b7  '+(c.tag==='active'?'Active (needs +48V)':'Passive (no power)'):'')}));
+  if(c.formula)body.append(el('div',{class:'formula',html:c.formula}));
+  body.append(el('div',{class:'note why',html:'<b>Why it matters \u2014 </b>'+c.why}));
+  if(c.id==='polar'||c.id==='inverse'||c.id==='proximity'){const map={polar:'polar',inverse:'inverse',proximity:'proximity'};const b=el('button',{class:'btn gold sm',style:'margin-top:14px'},'\u25b6 Hear it in the Lab');b.onclick=()=>{closeDetail();setTab('lab');setTimeout(()=>{const t=document.getElementById('st-'+map[c.id]);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});},120);};body.append(b);}
+  p.append(head,body);document.getElementById('overlay').classList.add('on');
+}
+function closeDetail(){document.getElementById('overlay').classList.remove('on');}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeDetail();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+
+function renderLearn(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'15 concepts \u00b7 along the spine'),el('h1',{class:'page'},'Learn'));
+  ['input','proc','bridge'].forEach(g=>{
+    const gh=el('div',{class:'grouphead'},el('div',{class:'k'},G[g].k),el('div',{class:'t'},G[g].t),el('div',{class:'d'},G[g].d));
+    view.append(gh);
+    const grid=el('div',{class:'grid'});
+    C.filter(c=>c.group===g).forEach(c=>{
+      const card=el('div',{class:'ccard',tabindex:'0',role:'button'},el('div',{class:'art',html:VIZ[c.id]()}),el('h3',{},c.name),el('p',{},c.short));
+      if(c.tag)card.append(el('div',{class:'tagrow'},el('span',{class:'tag '+c.tag},c.tag==='active'?'ACTIVE · +48V':'PASSIVE · NO POWER')));
+      card.onclick=()=>openDetail(c);
+      card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openDetail(c);}};
+      grid.append(card);
+    });
+    view.append(grid);
+  });
+}
+
+/* ============ LAB ============ */
+function station(id,title,sub){return el('div',{class:'station',id:'st-'+id},el('h3',{},title),el('div',{class:'ssub'},sub));}
+function ctlRow(label,input,valEl){return el('div',{class:'ctl'},el('label',{},label),input,valEl);}
+
+function renderLab(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Output · Recapitulation \u2014 use headphones'),el('h1',{class:'page'},'Lab'),
+    el('p',{class:'lead'},'You can\u2019t put hands on the mics from here, so do it by ear instead. Real generated sound, fully offline. Start each one quiet.'));
+
+  /* ---- Polar explorer ---- */
+  const pol=station('polar','Polar Pattern Explorer','Pick a pattern, then drag the source around the mic. Listen to how the pickup level changes with direction.');
+  const pcv=el('canvas');const psc=el('div',{class:'scope polar'},pcv);
+  let pattern='cardioid',angle=35,pPlaying=false;
+  const patbar=el('div',{class:'patbtns'});
+  const PATS=[['omni','Omni'],['cardioid','Cardioid'],['super','Supercardioid'],['hyper','Hypercardioid'],['fig8','Figure-8']];
+  PATS.forEach(([k,lbl])=>{const b=el('button',{class:'btn tog sm','aria-pressed':String(k===pattern)},lbl);b.onclick=()=>{pattern=k;patbar.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');updatePolarAudio();updateReadout();};patbar.append(b);});
+  const aIn=el('input',{type:'range',min:'0',max:'360',value:String(angle)});
+  const aVal=el('div',{class:'val'},angle+'\u00b0');
+  const pBtn=el('button',{class:'btn gold'},'\u25b6 Play');
+  const pRead=el('div',{class:'readout',html:'Pickup: <b>\u22121.7 dB</b>'});
+  pol.append(el('div',{style:'margin-bottom:8px'},patbar),psc,ctlRow('Source angle',aIn,aVal),el('div',{class:'lab-actions'},pBtn,pRead),
+    el('div',{class:'tip',html:'<b>Notice:</b> on a <b>cardioid</b> the rear (180\u00b0) drops out; on a <b>figure-8</b> the sides (90\u00b0/270\u00b0) null to silence; <b>omni</b> barely changes. Roughly: omni\u2248condenser-set-omni, cardioid\u2248dynamic, figure-8\u2248ribbon. The tone also dulls off-axis \u2014 that\u2019s off-axis coloration.'}));
+  view.append(pol);
+  function offaxisHz(){const m=Math.abs(angle>180?360-angle:angle);return 17000-Math.min(m,150)/180*13500;}
+  function updatePolarAudio(){if(!pPlaying)return;const mag=Math.abs(polarR(pattern,angle));setVol(0.16*mag);if(chain&&chain.extra.lp)chain.extra.lp.frequency.setTargetAtTime(offaxisHz(),actx.currentTime,0.02);}
+  function updateReadout(){const mag=Math.abs(polarR(pattern,angle));const db=20*Math.log10(Math.max(mag,1e-4));pRead.innerHTML=mag<0.02?'Pickup: <b>\u2248 null</b>':'Pickup: <b>'+db.toFixed(1)+' dB</b> ('+Math.round(mag*100)+'%)';}
+  aIn.oninput=()=>{angle=+aIn.value;aVal.textContent=angle+'\u00b0';updatePolarAudio();updateReadout();};
+  pBtn.onclick=()=>{if(pPlaying){stopAudio();pPlaying=false;pBtn.textContent='\u25b6 Play';pBtn.classList.replace('primary','gold');}else{startChain((c,g)=>{const o=c.createOscillator();o.type='sawtooth';o.frequency.value=180;const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=offaxisHz();o.connect(lp).connect(g);o.start();return{sources:[o],extra:{lp}};});pPlaying=true;pBtn.textContent='\u25a0 Stop';pBtn.classList.replace('gold','primary');updatePolarAudio();}};
+  updateReadout();
+  // drag
+  function angleFromEvent(e){const r=pcv.getBoundingClientRect();const px=(e.touches?e.touches[0].clientX:e.clientX)-r.left-r.width/2;const py=(e.touches?e.touches[0].clientY:e.clientY)-r.top-r.height/2;let deg=Math.atan2(px,-py)*180/Math.PI;if(deg<0)deg+=360;return Math.round(deg);}
+  let dragging=false;
+  pcv.addEventListener('pointerdown',e=>{dragging=true;angle=angleFromEvent(e);aIn.value=angle;aVal.textContent=angle+'\u00b0';updatePolarAudio();updateReadout();});
+  window.addEventListener('pointermove',e=>{if(dragging){angle=angleFromEvent(e);aIn.value=angle;aVal.textContent=angle+'\u00b0';updatePolarAudio();updateReadout();}});
+  window.addEventListener('pointerup',()=>{dragging=false;});
+  const pctx=pcv.getContext('2d');
+  animate(t=>{ready(pcv,pctx);const w=pcv.clientWidth,h=pcv.clientHeight,cx=w/2,cy=h/2,R=Math.min(w,h)*0.40;
+    pctx.clearRect(0,0,w,h);
+    // grid rings + radials
+    pctx.strokeStyle='rgba(255,255,255,0.10)';pctx.lineWidth=1;
+    [0.25,0.5,0.75,1].forEach(f=>{pctx.beginPath();pctx.arc(cx,cy,R*f,0,7);pctx.stroke();});
+    for(let a=0;a<360;a+=30){pctx.beginPath();pctx.moveTo(cx,cy);pctx.lineTo(cx+R*Math.sin(a*Math.PI/180),cy-R*Math.cos(a*Math.PI/180));pctx.stroke();}
+    pctx.fillStyle='rgba(255,255,255,0.4)';pctx.font='10px monospace';pctx.fillText('0\u00b0 front',cx-22,cy-R-8);pctx.fillText('180\u00b0',cx-12,cy+R+16);
+    // pattern fill
+    pctx.beginPath();for(let a=0;a<=360;a+=3){const m=Math.abs(polarR(pattern,a));const r=R*m;const x=cx+r*Math.sin(a*Math.PI/180),y=cy-r*Math.cos(a*Math.PI/180);a?pctx.lineTo(x,y):pctx.moveTo(x,y);}pctx.closePath();
+    pctx.fillStyle='rgba(224,164,88,0.16)';pctx.fill();pctx.strokeStyle='#E0A458';pctx.lineWidth=2.4;pctx.stroke();
+    // mic at center
+    pctx.fillStyle='#cfdaec';pctx.beginPath();pctx.arc(cx,cy,5,0,7);pctx.fill();
+    // pickup marker on curve
+    const mg=Math.abs(polarR(pattern,angle));const mr=R*mg;
+    pctx.strokeStyle='rgba(62,156,146,0.6)';pctx.lineWidth=1.5;pctx.beginPath();pctx.moveTo(cx,cy);pctx.lineTo(cx+R*1.18*Math.sin(angle*Math.PI/180),cy-R*1.18*Math.cos(angle*Math.PI/180));pctx.stroke();
+    // source dot (pulsing)
+    const sx=cx+R*1.18*Math.sin(angle*Math.PI/180),sy=cy-R*1.18*Math.cos(angle*Math.PI/180);
+    const pulse=3+1.5*Math.sin(t/250);pctx.fillStyle='#3E9C92';pctx.beginPath();pctx.arc(sx,sy,6,0,7);pctx.fill();pctx.strokeStyle='rgba(62,156,146,0.4)';pctx.lineWidth=2;pctx.beginPath();pctx.arc(sx,sy,6+pulse,0,7);pctx.stroke();
+    // level dot on curve
+    pctx.fillStyle='#fff';pctx.beginPath();pctx.arc(cx+mr*Math.sin(angle*Math.PI/180),cy-mr*Math.cos(angle*Math.PI/180),4,0,7);pctx.fill();
+  });
+
+  /* ---- Inverse square ---- */
+  const inv=station('inverse','Inverse Square Law','Move the source away from the mic and hear the level fall \u2014 about 6 dB every time you double the distance.');
+  const icv=el('canvas');const isc=el('div',{class:'scope'},icv);
+  let dist=1,iPlaying=false;
+  const dIn=el('input',{type:'range',min:'10',max:'80',value:'10'});
+  const dVal=el('div',{class:'val'},'1.0\u00d7');
+  const iBtn=el('button',{class:'btn gold'},'\u25b6 Play');
+  const iRead=el('div',{class:'readout',html:'Level: <b>0.0 dB</b>'});
+  inv.append(isc,ctlRow('Distance',dIn,dVal),el('div',{class:'lab-actions'},iBtn,iRead),
+    el('div',{class:'tip',html:'<b>Notice:</b> the drop is steep up close and gentle far away. That\u2019s why a singer leaning a few inches changes the level a lot \u2014 and why distance is a level control, not just a tone choice.'}));
+  view.append(inv);
+  const invDb=()=>20*Math.log10(1/dist);
+  function updInv(){dist=(+dIn.value)/10;dVal.textContent=dist.toFixed(1)+'\u00d7';iRead.innerHTML='Level: <b>'+invDb().toFixed(1)+' dB</b>';if(iPlaying)setVol(0.16*Math.pow(1/dist,2));}
+  dIn.oninput=updInv;
+  iBtn.onclick=()=>{if(iPlaying){stopAudio();iPlaying=false;iBtn.textContent='\u25b6 Play';iBtn.classList.replace('primary','gold');}else{startChain((c,g)=>{const o=c.createOscillator();o.type='triangle';o.frequency.value=330;o.connect(g);o.start();return{sources:[o]};});iPlaying=true;iBtn.textContent='\u25a0 Stop';iBtn.classList.replace('gold','primary');setVol(0.16*Math.pow(1/dist,2));}};
+  const ictx=icv.getContext('2d');
+  animate(t=>{ready(icv,ictx);const w=icv.clientWidth,h=icv.clientHeight,cy=h/2;ictx.clearRect(0,0,w,h);
+    const mx=40;ictx.fillStyle='#cfdaec';ictx.fillRect(mx-6,cy-12,12,24);ictx.fillStyle='rgba(255,255,255,0.4)';ictx.font='10px monospace';ictx.fillText('mic',mx-10,cy+30);
+    const sx=mx+(dist-1)/7*(w-110)+30;
+    for(let k=4;k>=1;k--){ictx.strokeStyle='rgba(224,164,88,'+(0.10*k)+')';ictx.lineWidth=1.4;ictx.beginPath();ictx.arc(mx,cy,(sx-mx)*k/4,0,7);ictx.stroke();}
+    const amp=Math.pow(1/dist,2);ictx.fillStyle='#3E9C92';ictx.beginPath();ictx.arc(sx,cy,6,0,7);ictx.fill();
+    ictx.fillStyle='#E0A458';ictx.font='12px monospace';ictx.fillText(invDb().toFixed(1)+' dB',sx-18,cy-16);
+    // level bar
+    ictx.fillStyle='rgba(255,255,255,0.12)';ictx.fillRect(w-30,20,14,h-40);ictx.fillStyle='#E0A458';const bh=(h-40)*amp;ictx.fillRect(w-30,20+(h-40-bh),14,bh);});
+
+  /* ---- Proximity ---- */
+  const prox=station('proximity','Proximity Effect','On a directional mic, move the source close and the low end blooms. Watch the curve lift and hear the bass swell.');
+  const xcv=el('canvas');const xsc=el('div',{class:'scope'},xcv);
+  let prox_d=1,xPlaying=false;
+  const xIn=el('input',{type:'range',min:'0',max:'100',value:'50'});
+  const xVal=el('div',{class:'val'},'mid');
+  const xBtn=el('button',{class:'btn gold'},'\u25b6 Play');
+  const xRead=el('div',{class:'readout',html:'Low shelf: <b>+5 dB</b>'});
+  prox.append(xsc,ctlRow('Distance',xIn,xVal),el('div',{class:'lab-actions'},xBtn,xRead),
+    el('div',{class:'notice',html:'A pure omni mic would show a flat line here at every distance \u2014 it has no proximity effect at all. That absence is exactly how you prove a pattern is omnidirectional.'}));
+  view.append(prox);
+  const proxBoost=()=>{const closeness=1-(+xIn.value)/100;return closeness*16;}; // 0..16 dB
+  function updProx(){const v=+xIn.value;xVal.textContent=v<33?'close':v>66?'far':'mid';xRead.innerHTML='Low shelf: <b>+'+proxBoost().toFixed(0)+' dB</b>';if(xPlaying&&chain&&chain.extra.ls)chain.extra.ls.gain.setTargetAtTime(proxBoost(),actx.currentTime,0.03);}
+  xIn.oninput=updProx;
+  xBtn.onclick=()=>{if(xPlaying){stopAudio();xPlaying=false;xBtn.textContent='\u25b6 Play';xBtn.classList.replace('primary','gold');}else{startChain((c,g)=>{const o=c.createOscillator();o.type='sawtooth';o.frequency.value=110;const ls=c.createBiquadFilter();ls.type='lowshelf';ls.frequency.value=180;ls.gain.value=proxBoost();o.connect(ls).connect(g);o.start();return{sources:[o],extra:{ls},};});setVol(0.13);xPlaying=true;xBtn.textContent='\u25a0 Stop';xBtn.classList.replace('gold','primary');}};
+  const xctx=xcv.getContext('2d');
+  animate(t=>{ready(xcv,xctx);const w=xcv.clientWidth,h=xcv.clientHeight;xctx.clearRect(0,0,w,h);
+    xctx.strokeStyle='rgba(255,255,255,0.10)';xctx.lineWidth=1;xctx.beginPath();xctx.moveTo(0,h*0.55);xctx.lineTo(w,h*0.55);xctx.stroke();
+    const boost=proxBoost();xctx.strokeStyle='rgba(255,255,255,0.25)';xctx.setLineDash([4,4]);xctx.beginPath();xctx.moveTo(0,h*0.55);xctx.lineTo(w,h*0.55);xctx.stroke();xctx.setLineDash([]);
+    xctx.strokeStyle='#E0A458';xctx.lineWidth=2.6;xctx.beginPath();
+    for(let i=0;i<=w;i++){const x=i/w;const lift=boost/16*(h*0.32)*Math.exp(-x*3.4);const y=h*0.55-lift;i?xctx.lineTo(i,y):xctx.moveTo(i,y);}xctx.stroke();
+    xctx.fillStyle='rgba(255,255,255,0.4)';xctx.font='10px monospace';xctx.fillText('low',6,h-8);xctx.fillText('high',w-34,h-8);});
+}
+
+/* ============ flashcards ============ */
+let fcQueue=[];
+function renderCards(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Active recall'),el('h1',{class:'page'},'Flashcards'),
+    el('p',{class:'lead'},'See the concept, then out loud give its definition, where it sits in the spine, and one place it shows up. Reveal to check; mark \u201cGot it\u201d only when you had it.'));
+  const t=el('div',{class:'lab-actions'},el('button',{class:'btn ghost sm'},'Restart deck'),el('button',{class:'btn ghost sm'},'Drill the unmastered'));
+  view.append(t,el('div',{id:'fcHost'}));
+  t.children[0].onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};
+  t.children[1].onclick=()=>{const weak=C.filter(c=>(store.mastered[c.id]||0)<2).map(c=>c.id);fcQueue=shuffle(weak.length?weak:C.map(c=>c.id));drawCard();};
+  if(!fcQueue.length)fcQueue=shuffle(C.map(c=>c.id));
+  drawCard();
+}
+function drawCard(){
+  const host=document.getElementById('fcHost');if(!host)return;host.innerHTML='';
+  if(!fcQueue.length){host.append(el('div',{class:'stage'},el('div',{class:'bigscore',html:'\u2713'}),el('p',{class:'prompt'},'Deck complete. '+masteredCount()+' of '+TOTAL+' concepts mastered.'),el('div',{class:'actions'},el('button',{class:'btn primary'},'Go again'))));host.querySelector('.btn').onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};return;}
+  const c=byId[fcQueue[0]],done=TOTAL-fcQueue.length+1;
+  const stage=el('div',{class:'stage'},el('div',{class:'counter'},'Card '+done+' of '+TOTAL+(((store.mastered[c.id]||0)>=2)?' \u00b7 mastered':'')),
+    el('div',{class:'art',html:VIZ[c.id]()}),el('h3',{style:'margin:6px 0 0;font-size:21px'},c.name),
+    el('div',{class:'prompt'},G[c.group].k),el('div',{id:'fcReveal'}));
+  host.append(stage);
+  const rev=stage.querySelector('#fcReveal');rev.append(el('div',{class:'actions'},el('button',{class:'btn primary'},'Reveal answer')));
+  rev.querySelector('.btn').onclick=()=>showBack(c);
+}
+function showBack(c){
+  const rev=document.getElementById('fcReveal');rev.innerHTML='';
+  const block=el('div',{class:'reveal'},el('p',{html:c.defn}));
+  if(c.comp)block.append(el('div',{class:'note comp',html:'<b>Components \u2014 </b>'+c.comp+(c.tag?'  \u00b7  '+(c.tag==='active'?'Active':'Passive'):'')}));
+  if(c.formula)block.append(el('div',{class:'formula',html:c.formula}));
+  block.append(el('div',{class:'note why',html:'<b>On a session \u2014 </b>'+c.why}));
+  rev.append(block,el('div',{class:'actions'},el('button',{class:'btn again'},'Review again'),el('button',{class:'btn ok'},'Got it')));
+  const[a,o]=rev.querySelectorAll('.actions .btn');
+  a.onclick=()=>{fcQueue.push(fcQueue.shift());drawCard();};
+  o.onclick=()=>{store.mastered[c.id]=(store.mastered[c.id]||0)+1;save();refreshProgress();fcQueue.shift();drawCard();};
+}
+
+/* ============ quiz ============ */
+const QPOOL=[
+ {q:'Which microphone type is active and requires phantom power?',opts:['Condenser','Dynamic','Ribbon','None of them'],a:'Condenser',ex:'<b>Condenser.</b> Its capacitor capsule must be charged and its electronics powered \u2014 hence +48V.'},
+ {q:'A coil moving through a magnet\u2019s field, generating its own signal, describes a:',opts:['Dynamic mic','Condenser mic','Ribbon mic','Preamp'],a:'Dynamic mic',ex:'<b>Dynamic (moving-coil).</b> It\u2019s passive \u2014 it generates the signal itself and needs no power.'},
+ {q:'The figure-8 pattern is the natural result of which mic\u2019s construction?',opts:['Ribbon','Dynamic','Condenser (omni)','USB mic'],a:'Ribbon',ex:'<b>Ribbon.</b> Its open front-and-back element yields figure-8 directly.'},
+ {q:'Phantom power is:',opts:['+48V DC sent up the mic cable','A type of preamp','An acoustic effect','+12V for dynamics'],a:'+48V DC sent up the mic cable',ex:'<b>+48V.</b> It powers active (condenser) mics; passive mics ignore it.'},
+ {q:'Doubling the distance from a mic changes the level by about:',opts:['\u22126 dB','\u22123 dB','\u221212 dB','No change'],a:'\u22126 dB',ex:'<b>\u22126 dB.</b> Inverse square law: double distance = a quarter of the power.'},
+ {q:'A directional mic\u2019s low end swelling as the source moves close is:',opts:['Proximity effect','Inverse square law','Off-axis coloration','Phantom power'],a:'Proximity effect',ex:'<b>Proximity effect.</b> It happens on pressure-gradient (directional) mics.'},
+ {q:'A mic with no proximity effect at all must be:',opts:['Omnidirectional','Cardioid','Figure-8','A ribbon'],a:'Omnidirectional',ex:'<b>Omni.</b> The absence of proximity effect is itself the proof of an omni pattern.'},
+ {q:'Which pattern takes front and back while rejecting the sides?',opts:['Figure-8','Cardioid','Omnidirectional','Supercardioid'],a:'Figure-8',ex:'<b>Figure-8.</b> Its nulls are at 90\u00b0 and 270\u00b0 \u2014 the sides go silent.'},
+ {q:'The 3:1 rule exists mainly to avoid:',opts:['Phase cancellation between mics','Phantom power faults','Proximity effect','Off-axis color'],a:'Phase cancellation between mics',ex:'<b>Comb filtering.</b> Keeping mics 3\u00d7 apart keeps the bleed too quiet to cancel audibly.'},
+ {q:'Compared with spaced (AB), a coincident (XY) pair is:',opts:['More mono-compatible','Wider but riskier in mono','Always louder','Lower in noise'],a:'More mono-compatible',ex:'<b>Coincident.</b> Same arrival time = phase-aligned, so it sums to mono cleanly.'},
+ {q:'A transducer in a microphone converts:',opts:['Acoustic energy into electrical signal','Electrical into acoustic','Line level into mic level','Phase into amplitude'],a:'Acoustic energy into electrical signal',ex:'<b>Acoustic \u2192 electrical.</b> How it does so defines the mic type.'},
+ {q:'Before anything else in the chain, every mic\u2019s weak signal must be raised by a:',opts:['Preamp','Compressor','Phantom supply','Diffuser'],a:'Preamp',ex:'<b>Preamp.</b> It brings mic level up to line level and is universal to all mic types.'},
+ {q:'You should never apply phantom power to a vintage:',opts:['Ribbon mic','Condenser mic','Dynamic mic','Preamp'],a:'Ribbon mic',ex:'<b>Passive ribbon.</b> A fault or hot-patch can stretch or tear the ribbon.'},
+ {q:'A mic\u2019s tonal fingerprint across the spectrum is its:',opts:['Frequency response','Polar pattern','Form factor','Transducer'],a:'Frequency response',ex:'<b>Frequency response.</b> Often published right next to the polar plot.'},
+ {q:'A cardioid mic rejects sound most strongly from the:',opts:['Rear','Front','Both sides equally','Top only'],a:'Rear',ex:'<b>Rear (180\u00b0).</b> Maximum on-axis, minimum at the back.'},
+ {q:'The condenser capsule produces signal by changing its:',opts:['Capacitance','Magnetic field','Coil resistance','Ribbon tension'],a:'Capacitance',ex:'<b>Capacitance.</b> The diaphragm-to-backplate gap changes as sound hits it.'}
+];
+let quiz={list:[],i:0,score:0,wrong:[]};
+function renderQuiz(){clearAnims();stopAudio();view.innerHTML='';view.append(el('div',{class:'eyebrow'},'Check the through-lines'),el('h1',{class:'page'},'Quiz'),el('div',{id:'qHost'}));startQuiz();}
+function startQuiz(){quiz={list:shuffle(QPOOL).slice(0,10),i:0,score:0,wrong:[]};drawQ();}
+function drawQ(){
+  const host=document.getElementById('qHost');if(!host)return;host.innerHTML='';
+  if(quiz.i>=quiz.list.length){if(quiz.score>store.quizBest){store.quizBest=quiz.score;save();}
+    const stage=el('div',{class:'stage'},el('div',{class:'bigscore',html:quiz.score+'<span>/'+quiz.list.length+'</span>'}),
+      el('p',{class:'prompt'},quiz.score===quiz.list.length?'Perfect \u2014 the through-lines are locked in.':quiz.score>=8?'Strong. Clean up the few below.':'Good start \u2014 revisit these in Learn and the Lab, then run it again.'),
+      el('div',{class:'scorebar'},'Best so far: '+store.quizBest+'/10'));
+    if(quiz.wrong.length){const l=el('div',{class:'explain on',style:'max-width:520px'},el('b',{},'Worth another look: '),quiz.wrong.join('; '));stage.append(l);}
+    stage.append(el('div',{class:'actions'},el('button',{class:'btn primary'},'New quiz'),el('button',{class:'btn ghost'},'Back to the Lab')));
+    host.append(stage);const[a,b]=stage.querySelectorAll('.actions .btn');a.onclick=startQuiz;b.onclick=()=>setTab('lab');return;}
+  const item=quiz.list[quiz.i];const stage=el('div',{class:'stage'});
+  stage.append(el('div',{class:'scorebar'},'Question '+(quiz.i+1)+' of '+quiz.list.length+' \u00b7 Score '+quiz.score));
+  stage.append(el('div',{class:'prompt',style:'font-size:16px;color:var(--ink)'},item.q));
+  const opts=el('div',{class:'opts'});
+  shuffle(item.opts).forEach(o=>{const b=el('button',{class:'opt'},o);b.onclick=()=>answerQ(b,o,item,stage);opts.append(b);});
+  stage.append(opts,el('div',{class:'explain',id:'qEx'}));host.append(stage);
+}
+function answerQ(btn,choice,item,stage){
+  stage.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.textContent===item.a)b.classList.add('correct');});
+  if(choice===item.a)quiz.score++;else{btn.classList.add('wrong');quiz.wrong.push(item.a);}
+  const ex=stage.querySelector('#qEx');ex.innerHTML=item.ex;ex.classList.add('on');
+  const next=el('div',{class:'actions'},el('button',{class:'btn primary'},quiz.i===quiz.list.length-1?'See results':'Next'));
+  ex.after(next);next.querySelector('.btn').onclick=()=>{quiz.i++;drawQ();};
+}
+
+/* ============ tabs ============ */
+const RENDER={howto:renderHowto,learn:renderLearn,lab:renderLab,cards:renderCards,quiz:renderQuiz};
+function setTab(name){document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name));clearAnims();stopAudio();RENDER[name]();window.scrollTo({top:0});}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+refreshProgress();setTab('howto');
+</script>
+</body>
+</html>
