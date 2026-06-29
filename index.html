@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audio Engineering — Interactive Study Tools</title>
+<style>
+  :root{
+    --navy:#14203A; --ink:#1B2A4A; --gold:#C77E2A; --gold2:#E0A458; --teal:#3E9C92;
+    --paper:#EEF2F8; --card:#FFFFFF; --line:#DCE4EF; --muted:#6B7791; --body:#33405A;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5}
+  .topbar{background:var(--navy);color:#fff;padding:16px 22px;box-shadow:0 2px 10px rgba(10,18,35,.25)}
+  .topbar .inner{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:14px}
+  .topbar svg{width:38px;height:24px}
+  .topbar .t{font-weight:700;letter-spacing:.14em;font-size:15px;text-transform:uppercase}
+  .topbar small{display:block;letter-spacing:.18em;color:#9fb0cc;font-size:10px;font-weight:600;margin-top:2px}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 20px 70px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:6px}
+  h1{font-size:30px;margin:0 0 .25em;letter-spacing:-.01em}
+  .lead{color:var(--body);max-width:60ch;margin:.2em 0 2em;font-size:15.5px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px}
+  a.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:22px;text-decoration:none;color:inherit;transition:transform .14s,box-shadow .14s,border-color .14s;box-shadow:0 8px 24px rgba(20,32,58,.05)}
+  a.card:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(20,32,58,.12);border-color:#c2d1e6}
+  a.card:focus-visible{outline:3px solid var(--gold2);outline-offset:3px}
+  .icon{width:62px;height:62px;border-radius:13px;background:linear-gradient(155deg,#16223C,#26385a);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .icon svg{width:36px;height:36px}
+  .num{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted)}
+  a.card h2{font-size:19px;margin:6px 0 6px}
+  a.card p{margin:0 0 16px;color:var(--body);font-size:13.8px;flex:1}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:3px 9px;border-radius:20px;background:#eef2f8;color:#33456b;border:1px solid #e0e7f1}
+  .go{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.03em;display:flex;align-items:center;gap:6px}
+  a.card:hover .go{color:#b06f22}
+  .go svg{width:14px;height:14px;transition:transform .14s}
+  a.card:hover .go svg{transform:translateX(3px)}
+  .note{margin-top:34px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px;font-size:13.5px;color:var(--body);display:flex;gap:14px;align-items:flex-start}
+  .note .b{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);font-weight:700;white-space:nowrap;padding-top:1px}
+  footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;padding:24px;font-family:var(--mono);letter-spacing:.04em;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="inner">
+  <svg viewBox="0 0 40 24" aria-hidden="true"><path d="M1 12 Q6 12 8 4 T15 12 T22 20 T29 4 T36 12 Q38 12 39 12" fill="none" stroke="#E0A458" stroke-width="2.2" stroke-linecap="round"/></svg>
+  <div class="t">Audio Engineering<small>University of Evansville · COMM 340</small></div>
+</div></div>
+
+<main class="wrap">
+  <div class="eyebrow">Sound Reinforcement &amp; Recording</div>
+  <h1>Interactive Study Tools</h1>
+  <p class="lead">Four self-paced tools, each with a hands-on Lab, concept cards, flashcards, and a quiz. They work in any browser, save your progress as you go, and run fully offline once loaded. Pick a topic to begin.</p>
+
+  <div class="grid">
+
+    <a class="card" href="Audio_Fundamentals_Study.html">
+      <div class="icon"><svg viewBox="0 0 36 36"><path d="M2 18 Q7 18 9 8 T17 18 T25 28 T33 18" fill="none" stroke="#E0A458" stroke-width="2.4" stroke-linecap="round"/></svg></div>
+      <div class="num">01 · Acoustics</div>
+      <h2>Audio Fundamentals</h2>
+      <p>How sound behaves as a pressure wave — frequency, amplitude, wavelength, phase, and how it reflects, absorbs, diffuses, and diffracts in a room. Hear two waves cancel to silence.</p>
+      <div class="tags"><span class="tag">12 concepts</span><span class="tag">4 lab stations</span></div>
+      <div class="go">Open tool <svg viewBox="0 0 16 16"><path d="M3 8h9M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </a>
+
+    <a class="card" href="Audio_Microphone_Study.html">
+      <div class="icon"><svg viewBox="0 0 36 36"><circle cx="18" cy="14" r="9" fill="none" stroke="#E0A458" stroke-width="2.2"/><path d="M18 5a9 9 0 0 1 0 18" fill="#E0A458" opacity=".45"/><line x1="18" y1="23" x2="18" y2="31" stroke="#E0A458" stroke-width="2.2"/><line x1="11" y1="31" x2="25" y2="31" stroke="#E0A458" stroke-width="2.2"/></svg></div>
+      <div class="num">02 · Input</div>
+      <h2>Microphones</h2>
+      <p>What a mic is and how it behaves in space — dynamic, ribbon, and condenser; polar patterns, proximity effect, the inverse-square law. Drag a source around the capsule and hear the rear go silent.</p>
+      <div class="tags"><span class="tag">15 concepts</span><span class="tag">polar explorer</span></div>
+      <div class="go">Open tool <svg viewBox="0 0 16 16"><path d="M3 8h9M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </a>
+
+    <a class="card" href="Audio_Connectors_Study.html">
+      <div class="icon"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="11" fill="none" stroke="#E0A458" stroke-width="2.2"/><circle cx="18" cy="12" r="2.1" fill="#E0A458"/><circle cx="13" cy="21" r="2.1" fill="#E0A458"/><circle cx="23" cy="21" r="2.1" fill="#E0A458"/></svg></div>
+      <div class="num">03 · Signal path</div>
+      <h2>Cables &amp; Connectors</h2>
+      <p>The eleven connectors you meet on a stage or in a studio — XLR, TRS, TS, speakON, RCA, USB, MIDI, and more — their wiring, balanced vs. unbalanced, and where each belongs in the signal chain.</p>
+      <div class="tags"><span class="tag">11 connectors</span><span class="tag">signal-chain challenges</span></div>
+      <div class="go">Open tool <svg viewBox="0 0 16 16"><path d="M3 8h9M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </a>
+
+    <a class="card" href="Audio_Digital_Study.html">
+      <div class="icon"><svg viewBox="0 0 36 36"><path d="M2 18 H8 V9 H14 V26 H20 V13 H26 V22 H32" fill="none" stroke="#E0A458" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg></div>
+      <div class="num">04 · Digital domain</div>
+      <h2>Digital Audio</h2>
+      <p>Turning sound into numbers — sample rate and Nyquist, bit depth, dBFS and clipping, .WAV and metadata, zero-crossing edits, and digital cables. Undersample a tone and hear it alias to the wrong pitch.</p>
+      <div class="tags"><span class="tag">10 terms</span><span class="tag">4 lab stations</span></div>
+      <div class="go">Open tool <svg viewBox="0 0 16 16"><path d="M3 8h9M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </a>
+
+  </div>
+
+  <div class="note">
+    <span class="b">Tip</span>
+    <span>Use headphones for the Lab sections — several demos generate real sound. Your progress is saved automatically in whichever browser you use.</span>
+  </div>
+</main>
+
+<footer>University of Evansville · Audio Engineering &nbsp;•&nbsp; Sound Reinforcement &amp; Recording</footer>
+</body>
+</html>
