@@ -504,5 +504,17 @@ function setTab(name){document.querySelectorAll('#tabs button').forEach(b=>b.set
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 refreshProgress();setTab('howto');
 </script>
+<script>
+(function(){
+  var LEARN='learn', LAB='lab';
+  var _h=RENDER.howto, _l=RENDER[LEARN];
+  RENDER.howto=function(){_h();var b=view.querySelector('.btn.gold');if(b){b.textContent='Continue to the Learn tab →';b.onclick=function(){setTab(LEARN);};}};
+  RENDER[LEARN]=function(){_l();var w=el('div',{style:'text-align:center;margin-top:26px'},el('button',{class:'btn gold'},'Go to the Lab →'));view.append(w);w.querySelector('button').onclick=function(){setTab(LAB);};};
+  var mk=document.querySelector('.mark');
+  if(mk && mk.tagName!=='A'){mk.style.cursor='pointer';mk.setAttribute('role','link');mk.setAttribute('tabindex','0');mk.setAttribute('title','Back to all study guides');mk.addEventListener('click',function(){location.href='index.html';});mk.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();location.href='index.html';}});}
+  var cur=document.querySelector('#tabs [aria-selected="true"]');
+  if(cur&&RENDER[cur.dataset.tab])RENDER[cur.dataset.tab]();
+})();
+</script>
 </body>
 </html>
