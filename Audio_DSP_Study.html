@@ -213,7 +213,7 @@ function addHit(d,sr,t,type,amp){const s=Math.floor(t*sr);if(type==='kick'){for(
  else if(type==='pluck'){for(let i=0;i<sr*0.5&&s+i<d.length;i++){const tt=i/sr,e=Math.exp(-tt*6);d[s+i]+=(Math.sin(2*Math.PI*330*tt)+0.5*Math.sin(2*Math.PI*660*tt))*e*amp*0.5;}}}
 function grooveBuf(c){if(BUF.groove)return BUF.groove;const sr=c.sampleRate,b=c.createBuffer(2,sr*2,sr);const beat=0.5;chanFill(b,d=>{for(let k=0;k<4;k++){addHit(d,sr,k*beat,'kick',k%2? .6:1.0);}addHit(d,sr,beat,'snare',0.8);addHit(d,sr,3*beat,'snare',0.9);for(let k=0;k<8;k++)addHit(d,sr,k*beat/2,'hat',k%2?0.35:0.6);});return BUF.groove=b;}
 function sparseBuf(c){if(BUF.sparse)return BUF.sparse;const sr=c.sampleRate,b=c.createBuffer(2,sr*2,sr);chanFill(d=>{},0);chanFill(b,d=>{addHit(d,sr,0.05,'clave',0.9);addHit(d,sr,1.05,'pluck',0.8);});return BUF.sparse=b;}
-function gateBuf(c){if(BUF.gate)return BUF.gate;const sr=c.sampleRate,b=c.createBuffer(2,sr*2,sr);chanFill(b,d=>{for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*0.05;addHit(d,sr,0.1,'snare',0.9);addHit(d,sr,0.7,'snare',0.85);addHit(d,sr,1.25,'snare',0.9);addHit(d,sr,1.65,'snare',0.8);});return BUF.gate=b;}
+function gateBuf(c){if(BUF.gate)return BUF.gate;const sr=c.sampleRate,b=c.createBuffer(2,sr*2,sr);chanFill(b,d=>{for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*0.02;addHit(d,sr,0.1,'snare',0.9);addHit(d,sr,0.7,'snare',0.85);addHit(d,sr,1.25,'snare',0.9);addHit(d,sr,1.65,'snare',0.8);});return BUF.gate=b;}
 function looper(c,b){const s=c.createBufferSource();s.buffer=b;s.loop=true;return s;}
 
 /* ---- WAV encode for TCE ---- */
