@@ -418,7 +418,7 @@ function gateStation(){
     // input level bar
     const bx=w*0.32,bw=w*0.14;cx.fillStyle='rgba(255,255,255,0.10)';cx.fillRect(bx,14,bw,base-14);const lh=base-lvlY(Math.max(lvl,-70));cx.fillStyle='#E0A458';cx.fillRect(bx,base-lh,bw,lh);cx.fillStyle='rgba(255,255,255,0.5)';cx.fillText('input',bx,base+12);
     // gate gain bar
-    const gg=gGain?(20*Math.log10(gGain.gain.value+1e-6)):-range;const gx=w*0.56;cx.fillStyle='rgba(255,255,255,0.10)';cx.fillRect(gx,14,bw,base-14);const frac=(gg+80)/80;cx.fillStyle=open?'#3E9C92':'#C7553E';cx.fillRect(gx,base-(base-14)*Math.max(0,frac),bw,(base-14)*Math.max(0,frac));cx.fillStyle='rgba(255,255,255,0.5)';cx.fillText('gate',gx,base+12);
+    const gg=gGain?(20*Math.log10(gGain.gain.value+1e-6)):-range;const gx=w*0.56;cx.fillStyle='rgba(255,255,255,0.10)';cx.fillRect(gx,14,bw,base-14);const frac=(gg+80)/80;cx.fillStyle=open?'#3E9C92':'#C7553E';cx.fillRect(gx,14,bw,base-14)*Math.max(0,frac);cx.fillStyle='rgba(255,255,255,0.5)';cx.fillText('gate',gx,base+12);
     cx.fillStyle=open?'#3E9C92':'#C7553E';cx.font='13px monospace';cx.fillText(open?'OPEN':'CLOSED',w*0.78,h*0.3);
     if(chain)rd.innerHTML='Gate: <b style="color:'+(open?'#3E9C92':'#C7553E')+'">'+(open?'OPEN':'CLOSED')+'</b>';
   });
