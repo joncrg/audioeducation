@@ -159,7 +159,7 @@ const G={
  tech:{k:'The techniques',t:'A/B · X/Y · ORTF · M/S',d:'For each one, know how to draw it, whether the mics match, and how coincident it is.'}
 };
 const FACTS={
- ab:[['Matching: optional — depends on source',''],['NOT COINCIDENT','sp'],['Spacing ≥ 3 × distance to source (3:1)','']],
+ ab:[['Matching: optional — depends on source',''],['NOT COINCIDENT','sp'],['A ↔ B ≥ 3 × (source → nearest mic) · 3:1','']],
  xy:[['Matching: YES','yes'],['COINCIDENT','sp'],['90° between capsules · cardioids · stacked','']],
  ortf:[['Matching: YES','yes'],['NEAR-COINCIDENT','sp'],['110° · 17 cm (6¾ in) · cardioids','']],
  ms:[['Matching: NO — complementary','no'],['COINCIDENT','sp'],['Mid cardioid → source · Side figure-8 at 90°','']]
@@ -187,7 +187,7 @@ const C=[
   defn:`Many playback systems (phones, PA, some broadcast) <b>sum L and R into one channel</b>. If the two mics heard a sound at <b>different times</b>, the summed copies interfere: <b>comb filtering</b>, a thin, hollow, phasey tone. It is the same phase cancellation from Audio Fundamentals.`,
   why:`Coincident pairs sum cleanly; the more spacing, the more you have to check mono. Always flip to mono before you commit to a spaced setup.`,lab:'compare'},
  {id:'ab',name:'A/B (spaced pair)',group:'tech',short:'Two mics spaced apart, aimed at the source. 3:1 rule.',
-  defn:`Two mics <b>placed apart</b>, both aimed straight at the source. <b>Not coincident.</b> Whether the mics match <b>depends on the source</b>; a pair of omnis is a common choice. Each mic covers its own part of a wide source, like the bass and treble strings of a grand piano, so the <b>3:1 rule</b> applies: the <b>distance between the two mics should be at least 3× the distance from each mic to the source</b>. Piano mics 1 ft above the strings go at least 3 ft apart.`,
+  defn:`Two mics <b>placed apart</b>, both aimed straight at the source. <b>Not coincident.</b> Whether the mics match <b>depends on the source</b>; a pair of omnis is a common choice. Each mic covers its own part of a wide source, like the bass and treble strings of a grand piano, so the <b>3:1 rule</b> applies: the <b>distance from Mic A to Mic B should be at least 3× the distance from the source to its nearest mic</b>. Piano mics 1 ft above the strings go at least 3 ft apart.`,
   facts:'ab',
   rel:`<b>Why 3:1 works:</b> each side of the source then reaches the far mic about 9–10 dB quieter, so the two mics don’t comb-filter badly when combined. <b>Watch out for the hole in the middle:</b> spread a pair much wider than the source itself and sound from the center reaches both mics weak and late. The image piles up at the speakers and goes vague in the middle.`,
   why:`The widest, most spacious technique, and the one to check in mono.`,lab:'ab'},
@@ -272,6 +272,7 @@ function solve(R,S){
   vs.forEach((v,vi)=>{const rs=R.mics.map(m=>Math.max(0.05,Math.hypot(v.x-m.x,v.y-m.y)));const rmin=Math.min(...rs);
     R.mics.forEach((m,mi)=>{const r=rs[mi],c=((v.x-m.x)*m.ax+(v.y-m.y)*m.ay)/r;let g=pat(m.p,c);if(v.dist)g*=rmin/r;out[mi].g[vi]=g;out[mi].d[vi]=(r-rmin)/SOS;out[mi].r[vi]=r;});});
   return out;}
+function nearestMic(R,sol){const i=sol[0].r[0]<=sol[1].r[0]?0:1;return{i,label:R.mics[i].label,d:sol[i].r[0]};}
 function matrix(S,R){
   if(R.mode==='ms'){if(S.listen==='mid')return{a:[1,0],b:[1,0]};if(S.listen==='side')return{a:[0,1],b:[0,-1]};return{a:[1,S.k],b:[1,-S.k]};}
   const pan=p=>[Math.cos((p+1)*Math.PI/4),Math.sin((p+1)*Math.PI/4)];const m0=pan(-S.width),m1=pan(S.width);return{a:[m0[0],m1[0]],b:[m0[1],m1[1]]};}
@@ -390,9 +391,9 @@ function stereoStation(cfg){
   if(cfg.techSel)st.append(segRow('Technique',[['ab','A/B'],['xy','X/Y'],['ortf','ORTF'],['ms','M/S']],S.tech,k=>{S.tech=k;setFacts();buildModeRows();apply();}));
   const xIn=slider(-V.xlim,V.xlim,0.01,S.x),xVal=el('div',{class:'val'});
   const yIn=slider(V.ymin,V.ymax,0.01,S.y),yVal=el('div',{class:'val'});
-  const posTxt=()=>{xVal.textContent=(Math.abs(S.x)<0.02?'center':(Math.abs(S.x).toFixed(2)+' m '+(S.x<0?'L':'R')));yVal.textContent=S.y.toFixed(2)+' m';};
+  const posTxt=()=>{xVal.textContent=(Math.abs(S.x)<0.02?'center':(Math.abs(S.x).toFixed(2)+' m '+(S.x<0?'L':'R')));if(cfg.view==='ab'){const R=rig(S),n=nearestMic(R,solve(R,S));yVal.textContent='→ '+n.label+' '+n.d.toFixed(2)+' m';}else yVal.textContent=S.y.toFixed(2)+' m';};
   xIn.oninput=()=>{S.x=+xIn.value;posTxt();apply();};yIn.oninput=()=>{S.y=+yIn.value;posTxt();apply();};
-  st.append(ctlRow('Source L↔R',xIn,xVal),ctlRow(cfg.view==='ab'?'Distance (d)':'Source distance',yIn,yVal));posTxt();
+  st.append(ctlRow('Source L↔R',xIn,xVal),ctlRow(cfg.view==='ab'?'Source fwd/back':'Source distance',yIn,yVal));posTxt();
   const modeHost=el('div');st.append(modeHost);
   function buildModeRows(){
     modeHost.innerHTML='';
@@ -445,7 +446,7 @@ function stereoStation(cfg){
     cx.strokeStyle='rgba(255,255,255,0.05)';cx.lineWidth=1;const gstep=cfg.view==='ab'?0.5:1;
     for(let gx=Math.ceil(V.x0/gstep)*gstep;gx<=V.x1;gx+=gstep){cx.beginPath();cx.moveTo(X(gx),0);cx.lineTo(X(gx),stageH);cx.stroke();}
     for(let gy=0;gy<=V.y1;gy+=gstep){cx.beginPath();cx.moveTo(0,Y(gy));cx.lineTo(w,Y(gy));cx.stroke();}
-    cx.fillStyle='rgba(255,255,255,0.35)';cx.font='10px monospace';{const gt='grid = '+(gstep===1?'1 m':'50 cm');cx.fillText(gt,w-cx.measureText(gt).width-8,14);}
+    cx.fillStyle='rgba(255,255,255,0.35)';cx.font='10px monospace';{const gt='grid = '+(gstep===1?'1 m':'50 cm');cx.fillText(gt,w-cx.measureText(gt).width-8,stageH-8);}
     // room hint
     if(cfg.room&&S.room!=='dry'){const col=S.room==='hall'?'rgba(62,156,146,':'rgba(199,85,62,';const my=Y(0);
       for(const sd of [-1,1]){const x0=sd<0?8:w-8;cx.strokeStyle=col+'0.55)';cx.lineWidth=1.5;cx.setLineDash([5,4]);
@@ -469,10 +470,11 @@ function stereoStation(cfg){
     // labels & dimensions
     cx.font='11px monospace';
     if(S.tech==='ab'){const yb=Y(0)+30;cx.strokeStyle='rgba(255,255,255,0.6)';cx.lineWidth=1;cx.beginPath();cx.moveTo(mp[0].x,yb);cx.lineTo(mp[1].x,yb);cx.moveTo(mp[0].x,yb-5);cx.lineTo(mp[0].x,yb+5);cx.moveTo(mp[1].x,yb-5);cx.lineTo(mp[1].x,yb+5);cx.stroke();
-      cx.fillStyle='rgba(255,255,255,0.75)';const lab='spacing '+S.spacing.toFixed(2)+' m';cx.fillText(lab,(mp[0].x+mp[1].x)/2-cx.measureText(lab).width/2,yb+16);
-      cx.strokeStyle='rgba(224,164,88,0.6)';cx.setLineDash([4,3]);cx.beginPath();cx.moveTo(sx,Y(0));cx.lineTo(sx,sy);cx.stroke();cx.setLineDash([]);
-      cx.fillStyle='rgba(224,164,88,0.9)';cx.fillText('d = '+S.y.toFixed(2)+' m',sx+6,(Y(0)+sy)/2);
-      if(cfg.view==='ab'){const ratio=S.spacing/S.y,ok=ratio>=2.95;cx.font='bold 13px monospace';cx.fillStyle=ok?'#3E9C92':'#C7553E';cx.fillText(ratio.toFixed(1)+' : 1 '+(ok?'✓ meets 3:1':'✗ under 3:1'),10,18);cx.font='11px monospace';}
+      cx.fillStyle='rgba(255,255,255,0.75)';const lab='A ↔ B = '+S.spacing.toFixed(2)+' m';cx.fillText(lab,(mp[0].x+mp[1].x)/2-cx.measureText(lab).width/2,yb+16);
+      {const nm=nearestMic(R,sol),q=mp[nm.i];cx.strokeStyle='#E0A458';cx.lineWidth=2.4;cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(q.x,q.y);cx.stroke();cx.lineWidth=1;
+       const dl='source → '+nm.label+' = '+nm.d.toFixed(2)+' m',mx2=(sx+q.x)/2,my2=(sy+q.y)/2;cx.fillStyle='rgba(14,23,48,0.85)';const tw=cx.measureText(dl).width;const lx=clamp(nm.i===0?mx2-tw-10:mx2+10,4,w-tw-4);cx.fillRect(lx-3,my2-11,tw+6,15);cx.fillStyle='#E0A458';cx.fillText(dl,lx,my2);
+       if(cfg.view==='ab'){const ratio=S.spacing/nm.d,ok=ratio>=2.95;cx.font='bold 13px monospace';cx.fillStyle=ok?'#3E9C92':'#C7553E';
+         const l1='A ↔ B = '+ratio.toFixed(1)+' × (source → '+nm.label+')',l2=ok?'✓ meets 3:1':(w<560?'✗ under 3:1':'✗ under 3:1 — spread the mics or move the source closer to its mic');cx.fillText(l1,10,18);cx.font='11px monospace';cx.fillText(l2,10,34);}}
       cx.font='bold 12px monospace';cx.fillStyle='rgba(224,164,88,0.95)';cx.fillText('A',mp[0].x-44,Y(0)+5);cx.fillStyle='rgba(62,156,146,0.95)';cx.fillText('B',mp[1].x+36,Y(0)+5);cx.font='11px monospace';}
     if(S.tech==='xy'||S.tech==='ortf'){const deg=S.tech==='xy'?90:110,half=deg/2*Math.PI/180,mx=ccx,my=Y(0),rr=64;
       cx.strokeStyle='rgba(255,255,255,0.6)';cx.lineWidth=1;cx.beginPath();cx.arc(mx,my,rr,-Math.PI/2-half,-Math.PI/2+half);cx.stroke();
@@ -506,7 +508,7 @@ function stereoStation(cfg){
     if(R.mode==='ms'){txt='Side <b>'+Math.round(S.k*100)+'%</b> · '+(S.listen==='dec'?'L = M+S, R = M−S':S.listen==='mid'?'Mid only':'Side only')+(cfg.room?' · '+ROOM_NAME[S.room]:'')+(S.mono?' · mono: Side cancels':'');}
     else{const g0=sol[0].g[0],g1=sol[1].g[0],dL=20*Math.log10(Math.max(g0,1e-4)/Math.max(g1,1e-4)),dT=(sol[0].d[0]-sol[1].d[0])*1000;
       txt='Level diff <b>'+Math.abs(dL).toFixed(1)+' dB</b> · Time diff <b>'+Math.abs(dT).toFixed(2)+' ms</b>';
-      if(S.tech==='ab'){const ratio=S.spacing/S.y;txt+=' · <span class="'+(ratio>=2.95?'good':'bad')+'">'+ratio.toFixed(1)+':1</span>';}}
+      if(S.tech==='ab'){const nm=nearestMic(R,sol),ratio=S.spacing/nm.d;txt+=' · A↔B ÷ source→'+nm.label+' = <span class="'+(ratio>=2.95?'good':'bad')+'">'+ratio.toFixed(1)+':1</span>';}}
     if(cfg.techSel)txt='<b>'+TECH_NAME[S.tech]+'</b> · '+txt;
     if(txt!==lastRd){rd.innerHTML=txt;lastRd=txt;}
   });
@@ -516,9 +518,9 @@ function renderLab(){
   clearAnims();stopAudio();view.innerHTML='';
   view.append(el('div',{class:'eyebrow'},'Hear it · headphones required'),el('h1',{class:'page'},'Lab'),
     el('p',{class:'lead'},'Each station is drawn from above, the way you draw it on paper: the source at the top, the two mics below with their polar patterns. Drag the source (or use the sliders) and listen to the image move. Then flip Mono sum. Everything is synthesized, and the stage is a simplified free-field model: level and time-of-arrival only. Start quiet.'));
-  stereoStation({id:'ab',view:'ab',title:'A/B · Spaced pair',sub:'Two mics apart, both aimed at the source, here set up like a pair over a grand piano. Set the spacing to at least 3× the distance (the 3:1 rule).',
+  stereoStation({id:'ab',view:'ab',title:'A/B · Spaced pair',sub:'Two mics apart, both aimed at the source, here set up like a pair over a grand piano. The 3:1 rule: the distance from Mic A to Mic B should be at least 3× the distance from the source to its nearest mic.',
     init:{tech:'ab',spacing:1.2,abPat:'omni',x:-0.55,y:0.4},abControls:true,
-    tip:'<b>Notice:</b> drag the source right up to mic A. Mic B hears it about 10 dB quieter; that’s the 3:1 rule doing its job. Now pull the distance up (or the spacing down) until the ratio drops under 3:1, then turn <b>Mono sum</b> on: the level difference shrinks, the time difference stays, and the mono curve fills with notches. <b>Hole in the middle:</b> set a wide spacing and slowly drag the source across the center. The image jumps from speaker to speaker instead of moving smoothly.'});
+    tip:'<b>Notice:</b> drag the source right up to mic A. Mic B hears it about 10 dB quieter; that’s the 3:1 rule doing its job. Now move the source away from its mic (or shrink the spacing) until the ratio drops under 3:1, then turn <b>Mono sum</b> on: the level difference shrinks, the time difference stays, and the mono curve fills with notches. <b>Hole in the middle:</b> set a wide spacing and slowly drag the source across the center. The image jumps from speaker to speaker instead of moving smoothly.'});
   stereoStation({id:'xy',view:'wide',title:'X/Y · Coincident',sub:'Two matching cardioids at one point, exactly 90° apart. Image from level only.',
     init:{tech:'xy',x:-1.2,y:3},
     tip:'<b>Notice:</b> drag the source anywhere and flip <b>Mono sum</b>. The curve stays flat because both capsules hear it at the same instant, so there is nothing to cancel. The image moves smoothly but stays narrower than A/B. Try <b>Pan width</b> at 100%, 50%, and 0%.'});
