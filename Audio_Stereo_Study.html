@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stereo Mic Technique — Active Study</title>
+<style>
+  :root{
+    --navy:#14203A; --ink:#1B2A4A; --gold:#C77E2A; --gold2:#E0A458; --teal:#3E9C92;
+    --paper:#EEF2F8; --card:#FFFFFF; --line:#DCE4EF; --muted:#6B7791; --body:#33405A;
+    --scope:#0E1730; --red:#C7553E;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5}
+  .topbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:12px 22px;gap:16px;box-shadow:0 2px 10px rgba(10,18,35,.25)}
+  a.mark{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.16em;font-size:14px;text-transform:uppercase;text-decoration:none;color:inherit;cursor:pointer;transition:opacity .12s}
+  a.mark:hover{opacity:.82}
+  .mark svg{width:34px;height:22px}
+  .mark small{display:block;letter-spacing:.16em;color:#9fb0cc;font-size:10px;font-weight:600;margin-top:1px;text-transform:none}
+  .prog{font-family:var(--mono);font-size:12px;color:#cfdaec;text-align:right;white-space:nowrap}
+  .prog b{color:var(--gold2)} .prog .bar{margin-top:5px;width:130px;height:5px;border-radius:3px;background:#2c3d5c;overflow:hidden}
+  .prog .bar i{display:block;height:100%;width:0;background:var(--gold2);transition:width .4s}
+  .tabs{position:sticky;top:50px;z-index:19;background:var(--card);border-bottom:1px solid var(--line);display:flex;gap:2px;padding:0 14px;overflow-x:auto}
+  .tabs button{appearance:none;border:0;background:none;font-family:var(--sans);font-size:14px;font-weight:600;color:var(--muted);padding:14px 14px 11px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--ink)} .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 20px 70px}
+  h1.page{font-size:25px;margin:.1em 0 .15em;letter-spacing:-.01em}
+  .lead{color:var(--body);max-width:64ch;margin:.2em 0 1.4em}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+  .grouphead{margin:28px 0 12px}
+  .grouphead .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .grouphead .t{font-size:18px;font-weight:700;color:var(--ink);margin-top:2px}
+  .grouphead .d{font-size:13px;color:var(--muted)}
+  .art{background:linear-gradient(160deg,#fafbfe,#eef3fa);border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .art svg{width:100%;height:auto;display:block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
+  .ccard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;text-align:left}
+  .ccard:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(20,32,58,.10);border-color:#c6d4e6}
+  .ccard .art{height:96px;margin-bottom:10px;padding:6px} .ccard h3{margin:0;font-size:15px} .ccard p{margin:4px 0 0;color:var(--muted);font-size:12.5px}
+  .overlay{position:fixed;inset:0;background:rgba(15,23,40,.55);display:none;z-index:40;padding:24px;overflow:auto}
+  .overlay.on{display:flex;align-items:flex-start;justify-content:center}
+  .panel{background:var(--card);border-radius:16px;max-width:680px;width:100%;margin:auto;overflow:hidden;box-shadow:0 24px 60px rgba(10,18,35,.4)}
+  .panel .head{display:flex;gap:18px;padding:18px 22px;background:linear-gradient(150deg,#fafbfe,#eaf0f9);border-bottom:1px solid var(--line);align-items:center}
+  .panel .head .art{width:190px;min-width:190px;height:104px;padding:6px}
+  .panel .head h2{margin:0 0 2px;font-size:21px} .panel .head .sub{color:var(--muted);font-size:12.5px;font-family:var(--mono)}
+  .panel .body{padding:18px 22px} .panel .body p{margin:0 0 12px;color:var(--body);font-size:14px}
+  .note{border-radius:10px;padding:12px 14px;font-size:13.5px}
+  .note.why{background:#eef4f3;border:1px solid #d6e8e4} .note.why b{color:#22685f}
+  .note.param{background:#f3f6fb;border:1px solid var(--line);margin-bottom:12px} .note.param b{color:var(--ink)}
+  .note.rel{background:#fbf6ee;border:1px solid #efe1cb;margin-bottom:12px} .note.rel b{color:#8a521b}
+  .callout{background:linear-gradient(150deg,#1a2742,#22324f);color:#dbe4f2;border-radius:12px;padding:14px 16px;margin:0 0 12px;font-size:13.5px}
+  .callout b{color:var(--gold2)}
+  .x{margin-left:auto;appearance:none;border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;color:var(--muted)}
+  .x:hover{color:var(--ink);border-color:#c6d4e6}
+  .btn{appearance:none;border:0;border-radius:10px;font-family:var(--sans);font-weight:650;font-size:14px;padding:11px 18px;cursor:pointer}
+  .btn.primary{background:var(--navy);color:#fff}.btn.primary:hover{background:#1d2c4a}
+  .btn.gold{background:var(--gold);color:#fff}.btn.gold:hover{background:#b06f22}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}.btn.ghost:hover{border-color:#c6d4e6}
+  .btn.ok{background:#e4f3f0;color:#1f6b62;border:1px solid #c9e7e1} .btn.again{background:#fbeede;color:#9a5a16;border:1px solid #f3dcc0}
+  .btn.sm{padding:8px 13px;font-size:13px}
+  .btn.tog{background:#fff;border:1px solid var(--line);color:var(--ink)} .btn.tog[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .station{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 24px rgba(20,32,58,.05)}
+  .station h3{margin:0 0 2px;font-size:18px} .station .ssub{color:var(--muted);font-size:13px;margin-bottom:10px}
+  .facts{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+  .fact{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;padding:3px 9px;border-radius:20px;background:#eef2f8;color:#33456b;border:1px solid #e0e7f1}
+  .fact.yes{background:#e4f3f0;color:#1f6b62;border-color:#c9e7e1}
+  .fact.no{background:#fbeede;color:#9a5a16;border-color:#f3dcc0}
+  .fact.sp{background:#e8edf6;color:#2f4d8f;border-color:#d6e0ef}
+  .scope{background:var(--scope);border-radius:12px;padding:6px;position:relative} .scope canvas{display:block;width:100%;height:200px}
+  .scope.arena canvas{height:410px;touch-action:none;cursor:grab}
+  .scope.arena canvas:active{cursor:grabbing}
+  .ctl{display:grid;grid-template-columns:118px 1fr 116px;align-items:center;gap:12px;margin-top:12px}
+  .ctl label{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .ctl .val{font-family:var(--mono);font-size:13px;color:var(--ink);text-align:right}
+  input[type=range]{width:100%;accent-color:var(--gold);height:26px;cursor:pointer}
+  .lab-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .segs{display:flex;gap:6px;flex-wrap:wrap}
+  .readout{font-family:var(--mono);font-size:13px;color:var(--ink);background:#f3f6fb;border:1px solid var(--line);border-radius:8px;padding:7px 11px} .readout b{color:var(--gold)}
+  .readout .bad{color:var(--red)} .readout .good{color:#22685f}
+  .notice{font-size:12.5px;color:var(--muted);background:#fbf6ee;border:1px solid #efe1cb;border-radius:8px;padding:9px 12px;margin-top:13px}
+  .tip{font-size:13.5px;color:var(--body);margin-top:12px}.tip b{color:var(--ink)}
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:600px;margin:0 auto;text-align:center;box-shadow:0 8px 24px rgba(20,32,58,.06)}
+  .stage .art{height:150px;padding:10px;margin:0 auto 12px;max-width:340px}
+  .counter{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.05em}
+  .prompt{font-size:15px;color:var(--body);margin:10px auto 16px;max-width:48ch}
+  .reveal{border-top:1px dashed var(--line);margin-top:16px;padding-top:16px;text-align:left} .reveal p{margin:0 0 10px;font-size:14px;color:var(--body)}
+  .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .opts{display:grid;gap:9px;margin:6px auto 0;max-width:520px;text-align:left}
+  .opt{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:13px 15px;font-size:14.5px;font-family:var(--sans);cursor:pointer;color:var(--ink);transition:.1s}
+  .opt:hover:not(:disabled){border-color:#9fb6d6;background:#f7faff} .opt:disabled{cursor:default}
+  .opt.correct{background:#e4f3f0;border-color:#7cc6bb;color:#1c5f57;font-weight:600} .opt.wrong{background:#fbe9e9;border-color:#e3a3a3;color:#9a3a3a}
+  .explain{margin:14px auto 0;max-width:520px;background:#f3f6fb;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13.5px;color:var(--body);text-align:left;display:none} .explain.on{display:block}.explain b{color:var(--ink)}
+  .scorebar{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px}
+  .bigscore{font-size:46px;font-weight:800;color:var(--navy);text-align:center;line-height:1} .bigscore span{color:var(--gold)}
+  .steps{counter-reset:s;display:grid;gap:14px;margin:18px 0}
+  .step{display:grid;grid-template-columns:42px 1fr;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .step .n{counter-increment:s;font-family:var(--mono);font-weight:700;color:#fff;background:var(--navy);width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .step .n::before{content:counter(s)} .step h3{margin:0 0 3px;font-size:16px}.step p{margin:0;color:var(--body);font-size:13.5px}
+  footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;padding:22px;font-family:var(--mono);letter-spacing:.04em}
+  @media (max-width:560px){.panel .head{flex-direction:column;align-items:flex-start}.ctl{grid-template-columns:84px 1fr 78px}.scope.arena canvas{height:380px}}
+  @media (prefers-reduced-motion:reduce){.ccard{transition:none}}
+  :focus-visible{outline:3px solid var(--gold2);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="mark" href="index.html" title="Back to all study guides">
+    <svg viewBox="0 0 40 22" aria-hidden="true"><circle cx="20" cy="15" r="3" fill="#E0A458"/><path d="M20 15 L9 4 M20 15 L31 4" stroke="#E0A458" stroke-width="2.2" stroke-linecap="round"/><path d="M12 11 Q20 3 28 11" fill="none" stroke="#E0A458" stroke-width="1.4" stroke-dasharray="2 2"/></svg>
+    <div>Stereo Mic Technique<small>Active study · University of Evansville &nbsp;•&nbsp; Creative Technologies &nbsp;•&nbsp; Prof. Jon Robertson</small></div>
+  </a>
+  <div class="prog" id="prog">Mastered <b><span id="pm">0</span>/11</b><div class="bar"><i id="pbar"></i></div></div>
+</div>
+<nav class="tabs" id="tabs" role="tablist">
+  <button role="tab" data-tab="howto" aria-selected="true">How to use this</button>
+  <button role="tab" data-tab="learn" aria-selected="false">Learn</button>
+  <button role="tab" data-tab="lab" aria-selected="false">Lab · hear it</button>
+  <button role="tab" data-tab="cards" aria-selected="false">Flashcards</button>
+  <button role="tab" data-tab="quiz" aria-selected="false">Quiz</button>
+</nav>
+<main class="wrap" id="view"></main>
+<div class="overlay" id="overlay"><div class="panel" id="panel"></div></div>
+<footer>University of Evansville · Creative Technologies &nbsp;•&nbsp; Audio Engineering &nbsp;•&nbsp; Stereo Microphone Technique &nbsp;•&nbsp; Jon Robertson</footer>
+
+<script>
+/* ============ polar math (shared by diagrams + lab) ============ */
+// signed response for cos(theta) = c; figure-8 keeps its polarity (front lobe +, rear lobe −)
+function pat(p,c){if(p==='omni')return 1;if(p==='card')return (1+c)/2;if(p==='fig8')return c;return 1;}
+function polarD(p,cx,cy,R,rot){let d='';for(let a=0;a<=360;a+=6){const m=Math.abs(pat(p,Math.cos(a*Math.PI/180)));const g=(a+rot)*Math.PI/180;const x=cx+R*m*Math.sin(g),y=cy-R*m*Math.cos(g);d+=(a?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}return d+'Z';}
+function micSVG(x,y,rot,p,col,R){R=R||20;const r=rot*Math.PI/180;return `<path d='${polarD(p,x,y,R,rot)}' fill='${col}' fill-opacity='.14' stroke='${col}' stroke-width='1.6'/><line x1='${x}' y1='${y}' x2='${(x+11*Math.sin(r)).toFixed(1)}' y2='${(y-11*Math.cos(r)).toFixed(1)}' stroke='#1B2A4A' stroke-width='2.4' stroke-linecap='round'/><circle cx='${x}' cy='${y}' r='3.2' fill='#1B2A4A'/>`;}
+const SRC=(x,y)=>`<circle cx='${x}' cy='${y}' r='6' fill='#3E9C92'/><circle cx='${x}' cy='${y}' r='10' fill='none' stroke='#3E9C92' stroke-opacity='.4' stroke-width='1.5'/>`;
+const T=(x,y,s,col,sz)=>`<text x='${x}' y='${y}' font-size='${sz||9}' fill='${col||'#6B7791'}' font-family='monospace'>${s}</text>`;
+const GOLD='#C77E2A',TEAL='#3E9C92';
+
+/* ============ diagrams (top-down: source at top, mics below) ============ */
+const VIZ={
+ coincident:()=>`<svg viewBox='0 0 220 96'>${SRC(110,14)}${micSVG(110,68,-45,'card',GOLD)}${micSVG(110,68,45,'card',TEAL)}${T(138,88,'one point')}</svg>`,
+ near:()=>`<svg viewBox='0 0 220 96'>${SRC(110,14)}${micSVG(98,68,-55,'card',GOLD)}${micSVG(122,68,55,'card',TEAL)}${T(64,90,'small gap + angle')}</svg>`,
+ spaced:()=>`<svg viewBox='0 0 220 96'>${SRC(110,14)}${micSVG(46,68,0,'omni',GOLD,16)}${micSVG(174,68,0,'omni',TEAL,16)}<line x1='62' y1='88' x2='158' y2='88' stroke='#9aa6b8' stroke-width='1.4' stroke-dasharray='4 3'/>${T(88,84,'spaced apart')}</svg>`,
+ matching:()=>`<svg viewBox='0 0 220 96'>${micSVG(70,50,0,'card',GOLD)}${micSVG(150,50,0,'card',GOLD)}${T(104,54,'=','#1B2A4A',16)}${T(52,88,'same model · same pattern')}</svg>`,
+ complementary:()=>`<svg viewBox='0 0 220 96'>${micSVG(70,50,0,'card',GOLD)}${micSVG(150,50,-90,'fig8',TEAL)}${T(104,54,'+','#1B2A4A',16)}${T(46,88,'cardioid')}${T(128,88,'figure-8')}</svg>`,
+ image:()=>`<svg viewBox='0 0 220 96'><rect x='8' y='10' width='14' height='18' rx='2' fill='#1B2A4A'/><rect x='198' y='10' width='14' height='18' rx='2' fill='#1B2A4A'/>${T(12,42,'L','#1B2A4A',10)}${T(202,42,'R','#1B2A4A',10)}
+   <line x1='30' y1='52' x2='190' y2='52' stroke='${GOLD}' stroke-width='5' stroke-linecap='round'/>${T(84,47,'100% L / 100% R')}
+   <line x1='70' y1='70' x2='150' y2='70' stroke='${GOLD}' stroke-width='5' stroke-linecap='round' opacity='.75'/>${T(88,65,'50% / 50%')}
+   <circle cx='110' cy='86' r='4' fill='${GOLD}'/>${T(120,89,'0% / 0% = mono')}</svg>`,
+ mono:()=>{let d='';for(let i=0;i<=200;i++){const x=10+i;const f=i/200;const y=40+22*Math.abs(Math.cos(Math.PI*f*6));d+=(i?'L':'M')+x+' '+(78-(y-40)).toFixed(1);}return `<svg viewBox='0 0 220 96'><line x1='10' y1='38' x2='210' y2='38' stroke='#D7DEEA'/>${T(12,30,'L + R summed')}<path d='${d}' fill='none' stroke='${GOLD}' stroke-width='2.2'/>${T(100,92,'comb filter notches')}</svg>`;},
+ ab:()=>`<svg viewBox='0 0 220 96'>${SRC(110,18)}${micSVG(40,62,0,'omni',GOLD,15)}${micSVG(180,62,0,'omni',TEAL,15)}<line x1='40' y1='84' x2='180' y2='84' stroke='#1B2A4A' stroke-width='1.2'/><path d='M40 80v8M180 80v8' stroke='#1B2A4A' stroke-width='1.2'/>${T(92,94,'≥ 3 × d','#1B2A4A',10)}<line x1='196' y1='62' x2='196' y2='18' stroke='#9aa6b8' stroke-dasharray='3 3'/>${T(200,44,'d')}</svg>`,
+ xy:()=>`<svg viewBox='0 0 220 96'>${SRC(110,12)}${micSVG(110,74,-45,'card',GOLD,20)}${micSVG(110,74,45,'card',TEAL,20)}<path d='M88.8 52.8 A30 30 0 0 1 131.2 52.8' fill='none' stroke='#1B2A4A' stroke-width='1.2'/>${T(138,48,'90°','#1B2A4A',10)}${T(140,92,'stacked')}</svg>`,
+ ortf:()=>`<svg viewBox='0 0 220 96'>${SRC(110,12)}${micSVG(96,68,-55,'card',GOLD,18)}${micSVG(124,68,55,'card',TEAL,18)}<path d='M83.8 49.6 A32 32 0 0 1 136.2 49.6' fill='none' stroke='#1B2A4A' stroke-width='1.2'/>${T(142,46,'110°','#1B2A4A',10)}<line x1='96' y1='88' x2='124' y2='88' stroke='#1B2A4A' stroke-width='1.2'/>${T(132,91,'17 cm')}</svg>`,
+ ms:()=>`<svg viewBox='0 0 220 96'>${SRC(110,12)}${micSVG(110,64,-90,'fig8',TEAL,26)}${micSVG(110,64,0,'card',GOLD,24)}${T(124,38,'M','#8a521b',10)}${T(68,60,'+','#22685f',12)}${T(148,60,'−','#22685f',12)}${T(80,92,'S lobes face the sides')}</svg>`
+};
+
+/* ============ data ============ */
+const G={
+ space:{k:'Spatial relationship',t:'Where the two capsules sit',d:'At one point, a little apart, or far apart. This decides whether the image comes from level, time, or both.'},
+ tone:{k:'Tonal relationship',t:'Which mics you pair',d:'Two of the same, or two different mics that each do a job.'},
+ image:{k:'Stereophonic representation',t:'How wide, and does it survive mono?',d:'How each mic lands in L and R, and what happens when L and R are summed.'},
+ tech:{k:'The techniques',t:'A/B · X/Y · ORTF · M/S',d:'For each one, know how to draw it, whether the mics match, and how coincident it is.'}
+};
+const FACTS={
+ ab:[['Matching: optional — depends on source',''],['NOT COINCIDENT','sp'],['Spacing ≥ 3 × distance to source (3:1)','']],
+ xy:[['Matching: YES','yes'],['COINCIDENT','sp'],['90° between capsules · cardioids · stacked','']],
+ ortf:[['Matching: YES','yes'],['NEAR-COINCIDENT','sp'],['110° · 17 cm (6¾ in) · cardioids','']],
+ ms:[['Matching: NO — complementary','no'],['COINCIDENT','sp'],['Mid cardioid → source · Side figure-8 at 90°','']]
+};
+const C=[
+ {id:'coincident',name:'Coincident pair',group:'space',short:'Both capsules at the same point. Image from level only.',
+  defn:`Both capsules sit at (as nearly as possible) <b>the same point</b>, usually stacked one directly above the other, and angled apart. Sound reaches both at the <b>same instant</b>, so the stereo image comes <b>only from level differences</b> between the two polar patterns.`,
+  why:`No time difference means nothing to cancel when L and R are summed: coincident pairs are the <b>mono-safe</b> choice. X/Y and M/S are coincident.`,lab:'xy'},
+ {id:'near',name:'Near-coincident pair',group:'space',short:'A small gap plus an angle. Level and a little time.',
+  defn:`The capsules are a <b>short distance apart</b> (about the width of a head) <b>and angled</b>. The angle creates level differences; the small spacing adds <b>small time-of-arrival differences</b>, much as your two ears hear.`,
+  why:`A wider, more natural image than a coincident pair while staying mostly mono-compatible. ORTF is the classic near-coincident technique.`,lab:'ortf'},
+ {id:'spaced',name:'Spaced pair (not coincident)',group:'space',short:'Mics apart. Image mostly from time differences.',
+  defn:`The mics are placed <b>apart</b>, from a few feet to many, usually aimed straight at the source. Sound reaches the nearer mic first, so the image comes largely from <b>time-of-arrival differences</b> (plus level differences when one mic is much closer).`,
+  why:`Wide and spacious, but those time differences <b>comb-filter when summed to mono</b>. A/B is the spaced technique.`,lab:'ab'},
+ {id:'matching',name:'Matching mics',group:'tone',short:'Same model, same pattern. Ideally a matched pair.',
+  defn:`Two of the <b>same mic</b>, set to the <b>same polar pattern</b>, and ideally a factory-<b>matched pair</b>. Then L and R differ only because of <i>where</i> the mics are, never because one mic sounds different.`,
+  why:`If the two mics differ in tone or sensitivity, the image leans toward one side. X/Y and ORTF require matching mics.`,lab:'xy'},
+ {id:'complementary',name:'Complementary mics',group:'tone',short:'Two different mics, each doing a different job.',
+  defn:`Two <b>different</b> mics, often with <b>different polar patterns</b>, where each captures a different part of the picture. The pair works because the two signals are <b>combined</b> afterward, not because they match.`,
+  why:`M/S is the classic complementary pair: a cardioid Mid for the source and a figure-8 Side for the sides of the room.`,lab:'ms'},
+ {id:'image',name:'Stereo image & pan width',group:'image',short:'100/100 is widest, 50/50 is narrower, 0/0 is mono.',
+  defn:`How much of each mic is represented in the <b>Left and Right</b> channels. Pan the pair <b>100% L / 100% R</b> for the widest image; <b>50% L / 50% R</b> narrows it; <b>0% / 0% (both center)</b> collapses it to mono.`,
+  why:`The technique sets how wide the recording <i>can</i> be; pan width sets how much of that width the listener hears. Decide how wide you want the image before you choose a technique.`,lab:'xy'},
+ {id:'mono',name:'Mono compatibility',group:'image',short:'Does it still sound right when L + R are summed?',
+  defn:`Many playback systems (phones, PA, some broadcast) <b>sum L and R into one channel</b>. If the two mics heard a sound at <b>different times</b>, the summed copies interfere: <b>comb filtering</b>, a thin, hollow, phasey tone. It is the same phase cancellation from Audio Fundamentals.`,
+  why:`Coincident pairs sum cleanly; the more spacing, the more you have to check mono. Always flip to mono before you commit to a spaced setup.`,lab:'compare'},
+ {id:'ab',name:'A/B (spaced pair)',group:'tech',short:'Two mics spaced apart, aimed at the source. 3:1 rule.',
+  defn:`Two mics <b>placed apart</b>, both aimed straight at the source. <b>Not coincident.</b> Whether the mics match <b>depends on the source</b>; a pair of omnis is a common choice. Each mic covers its own part of a wide source, like the bass and treble strings of a grand piano, so the <b>3:1 rule</b> applies: the <b>distance between the two mics should be at least 3× the distance from each mic to the source</b>. Piano mics 1 ft above the strings go at least 3 ft apart.`,
+  facts:'ab',
+  rel:`<b>Why 3:1 works:</b> each side of the source then reaches the far mic about 9–10 dB quieter, so the two mics don’t comb-filter badly when combined. <b>Watch out for the hole in the middle:</b> spread a pair much wider than the source itself and sound from the center reaches both mics weak and late. The image piles up at the speakers and goes vague in the middle.`,
+  why:`The widest, most spacious technique, and the one to check in mono.`,lab:'ab'},
+ {id:'xy',name:'X/Y',group:'tech',short:'Two matching cardioids, one point, exactly 90°.',
+  defn:`Two <b>matching cardioids</b> with their capsules at the <b>same point</b> (stacked one directly above the other) and a <b>perfect 90° angle</b> between them, each aimed 45° off the center of the source. <b>Perfectly coincident.</b> The capsules cross: the mic aimed at the <i>left</i> of the source feeds the <b>Left</b> channel.`,
+  facts:'xy',
+  why:`Level differences only, so it is <b>100% mono-compatible</b>. The image is focused and dependable but narrower than spaced techniques.`,lab:'xy'},
+ {id:'ortf',name:'ORTF',group:'tech',short:'Two matching cardioids, 17 cm apart, 110°.',
+  defn:`Developed by engineers at the French national broadcaster (ORTF: <i>Office de Radiodiffusion Télévision Française</i>) to mimic the <b>space between our two ears</b>. Two <b>matching cardioids</b>, <b>17 cm (6¾ in) apart</b>, angled <b>110°</b> from each other and pointing at the source (55° either side of center). <b>Near-coincident.</b>`,
+  facts:'ortf',
+  why:`The angle supplies level differences and the head-width spacing adds small time differences. The result is wider and more natural than X/Y while staying mostly mono-safe.`,lab:'ortf'},
+ {id:'ms',name:'M/S (Mid/Side)',group:'tech',short:'Cardioid at the source + figure-8 at 90°. Great room, great M/S.',
+  defn:`A <b>coincident</b> pair of <b>complementary</b> (non-matching) mics. The <b>Mid</b> is a cardioid aimed directly at the source. The <b>Side</b> is a figure-8 turned exactly <b>90° away</b>: its null faces the source and its two lobes face the <b>sides of the room</b>. The Mid captures the source; the Side captures what arrives from the sides, which in a real space is <b>mostly the room</b>.`,
+  facts:'ms',
+  rel:`<b>Use M/S when the room sounds great.</b> Since the Side mic mostly hears the room, M/S shines in a concert hall: turning up the Side turns up a beautiful room. In a closet or a bad-sounding room, the Side is mostly bad reflections, and widening the image just turns up the bad room.`,
+  callout:`<b>Decoding: M/S isn’t stereo until you decode it.</b> Left = Mid + Side, Right = Mid − Side. In a DAW: Mid panned center; Side duplicated, one copy polarity-flipped, the two copies panned hard L and hard R. The <b>Side level is your width control</b>, even after the recording. Sum to mono and the two Side copies cancel, leaving the pure Mid: <b>perfectly mono-compatible</b>.`,
+  why:`Adjustable width after the fact and perfect mono, as long as the room is worth hearing.`,lab:'ms'}
+];
+const byId=Object.fromEntries(C.map(c=>[c.id,c])); const TOTAL=C.length;
+
+/* ============ progress ============ */
+const KEY='ue_stereo_v1'; let store={mastered:{},quizBest:0};
+try{const s=localStorage.getItem(KEY);if(s)store=Object.assign(store,JSON.parse(s));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+function masteredCount(){return C.filter(c=>(store.mastered[c.id]||0)>=2).length;}
+function refreshProgress(){const m=masteredCount();const b=document.querySelector('#prog b');if(b)b.innerHTML='<span id="pm">'+m+'</span>/'+TOTAL;const bar=document.getElementById('pbar');if(bar)bar.style.width=(100*m/TOTAL)+'%';}
+
+/* ============ helpers ============ */
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const x in a){if(x==='class')e.className=a[x];else if(x==='html')e.innerHTML=a[x];else e.setAttribute(x,a[x]);}k.flat().forEach(c=>e.append(c));return e;};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function factsRow(key){const w=el('div',{class:'facts'});(FACTS[key]||[]).forEach(([t,k])=>w.append(el('span',{class:'fact '+k},t)));return w;}
+
+/* ============ audio engine ============ */
+let actx=null,chain=null,activeSim=null;
+function ctx(){if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return actx;}
+function stopAudio(){
+  if(activeSim){const a=activeSim;activeSim=null;a.setPlaying(false);}
+  if(chain&&actx){try{const t=actx.currentTime;chain.g.gain.cancelScheduledValues(t);chain.g.gain.setTargetAtTime(0,t,0.02);const ss=chain.sources;setTimeout(()=>ss.forEach(s=>{try{s.stop();}catch(e){}}),160);}catch(e){}}
+  chain=null;
+}
+function startChain(build,vol){const c=ctx();if(!c)return null;if(c.state==='suspended')c.resume();stopAudio();try{const g=c.createGain();g.gain.value=0;g.connect(c.destination);const parts=build(c,g);g.gain.setTargetAtTime(vol==null?0.14:vol,c.currentTime,0.03);chain={g,sources:parts.sources,extra:parts.extra||{}};return chain;}catch(e){return null;}}
+
+/* ---- synthesized sources (mono, cached) ---- */
+let BUF={};
+function pianoBuf(c){if(BUF.piano)return BUF.piano;const sr=c.sampleRate,len=Math.floor(sr*2.4),b=c.createBuffer(1,len,sr),d=b.getChannelData(0);
+  const notes=[[0,48],[0.3,55],[0.6,60],[0.9,64],[1.2,67],[1.5,72],[1.8,64],[2.1,55]];
+  notes.forEach(([t0,n])=>{const f=440*Math.pow(2,(n-69)/12),s=Math.floor(t0*sr),N=Math.floor(sr*1.4),fade=Math.floor(sr*0.15);
+    for(let k=1;k<=10;k++){const fk=f*k*Math.sqrt(1+0.0004*k*k);if(fk>sr/2.2)break;const ak=0.3/Math.pow(k,1.1),dk=2.2+k*0.9,w=2*Math.PI*fk/sr;
+      for(let i=0;i<N;i++){let e=Math.exp(-dk*i/sr)*Math.min(1,i/(0.002*sr));if(i>N-fade)e*=(N-i)/fade;d[(s+i)%len]+=ak*Math.sin(w*i)*e;}}
+    const hn=Math.floor(sr*0.006);for(let i=0;i<hn;i++)d[(s+i)%len]+=(Math.random()*2-1)*0.12*(1-i/hn);});
+  let pk=0;for(let i=0;i<len;i++)pk=Math.max(pk,Math.abs(d[i]));for(let i=0;i<len;i++)d[i]*=0.6/pk;return BUF.piano=b;}
+function burstBuf(c){if(BUF.burst)return BUF.burst;const sr=c.sampleRate,len=Math.floor(sr*2.4),b=c.createBuffer(1,len,sr),d=b.getChannelData(0);
+  [0,0.6,1.2,1.8].forEach(t0=>{const s=Math.floor(t0*sr),n=Math.floor(sr*0.3);let lp=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;lp=lp*0.35+w*0.65;const t=i/sr;d[s+i]+=lp*Math.exp(-t*16)*Math.min(1,t/0.002)*0.6;}});return BUF.burst=b;}
+function srcBuf(c,type){return type==='burst'?burstBuf(c):pianoBuf(c);}
+function irFor(c,room){const key='ir_'+room;if(BUF[key])return BUF[key];const sr=c.sampleRate;
+  const dur=room==='hall'?2.6:room==='closet'?0.5:0.05,len=Math.floor(sr*dur),b=c.createBuffer(2,len,sr);
+  for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);
+    if(room==='hall'){const pre=Math.floor(sr*0.022);let lp=0;for(let i=0;i<len;i++){const t=i/sr;const s=(Math.random()*2-1)*Math.exp(-t/0.6);lp=lp*0.55+s*0.45;d[i]=i<pre?0:lp;}}
+    else if(room==='closet'){for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.exp(-(i/sr)/0.07);
+      const p1=Math.floor(sr*0.0023),p2=Math.floor(sr*0.0037),fl=Math.floor(sr*0.018);
+      for(let i=p1;i<len;i++)d[i]+=0.7*d[i-p1];for(let i=p2;i<len;i++)d[i]+=0.55*d[i-p2];for(let i=fl;i<len;i++)d[i]+=0.45*d[i-fl];}
+    else{d[0]=1;}}
+  return BUF[key]=b;}
+const ROOM_LVL={dry:0,hall:0.55,closet:0.6};
+const ROOM_NAME={dry:'Dry (no room)',hall:'Concert hall',closet:'Closet'};
+
+/* ---- the stereo-pair model ----
+   Top-down free field. Each mic hears the source with gain = polar pattern × (inverse distance, relative to the
+   nearest mic) and a delay = extra path ÷ 343 m/s. The room is two decorrelated reverb tails arriving from the
+   left and right sides, picked up through each mic's polar pattern. */
+const SOS=343;
+function rig(S){const r=d=>d*Math.PI/180;
+  if(S.tech==='ab'){const s=S.spacing/2;return{mode:'pair',mics:[{x:-s,y:0,ax:0,ay:1,p:S.abPat,label:'A'},{x:s,y:0,ax:0,ay:1,p:S.abPat,label:'B'}]};}
+  if(S.tech==='xy'){const a=r(45);return{mode:'pair',mics:[{x:0,y:0,ax:-Math.sin(a),ay:Math.cos(a),p:'card',label:'L'},{x:0,y:0,ax:Math.sin(a),ay:Math.cos(a),p:'card',label:'R'}]};}
+  if(S.tech==='ortf'){const a=r(55);return{mode:'pair',mics:[{x:-0.085,y:0,ax:-Math.sin(a),ay:Math.cos(a),p:'card',label:'L'},{x:0.085,y:0,ax:Math.sin(a),ay:Math.cos(a),p:'card',label:'R'}]};}
+  return{mode:'ms',mics:[{x:0,y:0,ax:0,ay:1,p:'card',label:'M'},{x:0,y:0,ax:-1,ay:0,p:'fig8',label:'S'}]};}
+const ROOM_POS=[[-9,3],[9,3]];
+function solve(R,S){
+  const vs=[{x:S.x,y:S.y,dist:true},{x:ROOM_POS[0][0],y:ROOM_POS[0][1]},{x:ROOM_POS[1][0],y:ROOM_POS[1][1]}];
+  const out=R.mics.map(()=>({g:[0,0,0],d:[0,0,0],r:[0,0,0]}));
+  vs.forEach((v,vi)=>{const rs=R.mics.map(m=>Math.max(0.05,Math.hypot(v.x-m.x,v.y-m.y)));const rmin=Math.min(...rs);
+    R.mics.forEach((m,mi)=>{const r=rs[mi],c=((v.x-m.x)*m.ax+(v.y-m.y)*m.ay)/r;let g=pat(m.p,c);if(v.dist)g*=rmin/r;out[mi].g[vi]=g;out[mi].d[vi]=(r-rmin)/SOS;out[mi].r[vi]=r;});});
+  return out;}
+function matrix(S,R){
+  if(R.mode==='ms'){if(S.listen==='mid')return{a:[1,0],b:[1,0]};if(S.listen==='side')return{a:[0,1],b:[0,-1]};return{a:[1,S.k],b:[1,-S.k]};}
+  const pan=p=>[Math.cos((p+1)*Math.PI/4),Math.sin((p+1)*Math.PI/4)];const m0=pan(-S.width),m1=pan(S.width);return{a:[m0[0],m1[0]],b:[m0[1],m1[1]]};}
+function imagePos(S,R,sol,M){if(S.mono)return 0;let L=0,Rr=0;for(let m=0;m<2;m++){L+=M.a[m]*sol[m].g[0];Rr+=M.b[m]*sol[m].g[0];}
+  const pl=(Rr*Rr-L*L)/(Rr*Rr+L*L+1e-9);let pt=0;if(R.mode==='pair'){const dt=sol[0].d[0]-sol[1].d[0];pt=clamp(dt/0.001,-1,1)*S.width;}return clamp(pl+pt,-1,1);}
+function monoResp(sol,M,N){const out=new Float32Array(N);let norm=0;const c=[M.a[0]+M.b[0],M.a[1]+M.b[1]];
+  for(let m=0;m<2;m++)norm+=Math.abs(c[m]*sol[m].g[0]);
+  for(let i=0;i<N;i++){const f=20*Math.pow(1000,i/(N-1)),w=2*Math.PI*f;let re=0,im=0;for(let m=0;m<2;m++){const a=c[m]*sol[m].g[0],t=sol[m].d[0];re+=a*Math.cos(w*t);im-=a*Math.sin(w*t);}
+    out[i]=norm<1e-6?-60:20*Math.log10(Math.max(Math.hypot(re,im)/norm,1e-4));}
+  return out;}
+
+function buildSim(c,g,S){
+  const src=c.createBufferSource();src.buffer=srcBuf(c,S.srcType);src.loop=true;
+  const roomIn=c.createGain();roomIn.gain.value=ROOM_LVL[S.room]||0;const conv=c.createConvolver();conv.buffer=irFor(c,S.room==='dry'?'hall':S.room);
+  const split=c.createChannelSplitter(2);src.connect(roomIn);roomIn.connect(conv);conv.connect(split);
+  const rL=c.createGain(),rR=c.createGain();split.connect(rL,0);split.connect(rR,1);
+  const vin=[src,rL,rR],mics=[c.createGain(),c.createGain()],D=[[],[]],GN=[[],[]];
+  for(let m=0;m<2;m++)for(let v=0;v<3;v++){const d=c.createDelay(0.1),gg=c.createGain();gg.gain.value=0;vin[v].connect(d);d.connect(gg);gg.connect(mics[m]);D[m][v]=d;GN[m][v]=gg;}
+  const Lb=c.createGain(),Rb=c.createGain(),toL=[],toR=[];
+  for(let m=0;m<2;m++){toL[m]=c.createGain();toR[m]=c.createGain();mics[m].connect(toL[m]);toL[m].connect(Lb);mics[m].connect(toR[m]);toR[m].connect(Rb);}
+  const mLL=c.createGain(),mLR=c.createGain(),mRL=c.createGain(),mRR=c.createGain(),mer=c.createChannelMerger(2);
+  Lb.connect(mLL);mLL.connect(mer,0,0);Rb.connect(mRL);mRL.connect(mer,0,0);Lb.connect(mLR);mLR.connect(mer,0,1);Rb.connect(mRR);mRR.connect(mer,0,1);
+  mer.connect(g);src.start();
+  return{sources:[src],extra:{nodes:{D,G:GN,toL,toR,mLL,mLR,mRL,mRR,conv,roomIn,room:S.room}}};
+}
+function applySim(sim){
+  if(!sim.playing||!chain||!chain.extra.nodes||!actx)return;const n=chain.extra.nodes,S=sim.S,t=actx.currentTime,k=0.015;
+  const R=rig(S),sol=solve(R,S),M=matrix(S,R);
+  for(let m=0;m<2;m++){for(let v=0;v<3;v++){n.D[m][v].delayTime.setTargetAtTime(sol[m].d[v],t,k);n.G[m][v].gain.setTargetAtTime(sol[m].g[v],t,k);}
+    n.toL[m].gain.setTargetAtTime(M.a[m],t,k);n.toR[m].gain.setTargetAtTime(M.b[m],t,k);}
+  const mo=S.mono;n.mLL.gain.setTargetAtTime(mo?0.5:1,t,k);n.mRR.gain.setTargetAtTime(mo?0.5:1,t,k);n.mLR.gain.setTargetAtTime(mo?0.5:0,t,k);n.mRL.gain.setTargetAtTime(mo?0.5:0,t,k);
+  if(S.room!==n.room&&S.room!=='dry'){n.conv.buffer=irFor(actx,S.room);n.room=S.room;}
+  n.roomIn.gain.setTargetAtTime(ROOM_LVL[S.room]||0,t,0.05);
+}
+
+/* ============ animation ============ */
+let anims=[];
+function animate(fn){let id;function loop(t){fn(t);id=requestAnimationFrame(loop);}id=requestAnimationFrame(loop);const h={cancel(){cancelAnimationFrame(id);}};anims.push(h);return h;}
+function clearAnims(){anims.forEach(h=>h.cancel());anims=[];}
+function ready(cv,c){const dpr=window.devicePixelRatio||1;const w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}c.setTransform(dpr,0,0,dpr,0,0);}
+const view=document.getElementById('view');
+
+/* ============ HOW TO ============ */
+function renderHowto(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'A method for studying on your own'),
+    el('h1',{class:'page'},'Two mics, one picture. Learn to hear where it comes from.'),
+    el('p',{class:'lead'},'Every stereo technique answers the same three questions: where the two capsules sit (spatial relationship), which mics you pair (tonal relationship), and how wide the image should be, including whether it survives mono. Learn those, then hear four classic answers: A/B, X/Y, ORTF, and M/S. Headphones are required; stereo imaging is the whole point.'));
+  const steps=[
+    ['Learn the three questions','Read the Learn cards. Each technique card shows the setup the way you would draw it, plus the facts that define it: matching or not, and coincident, near-coincident, or not coincident.'],
+    ['Hear it in the Lab','Each technique has its own station drawn from above. Drag the source around the stage and hear the image move in your headphones. Flip Mono sum to hear what each technique loses when L and R are combined. The last station compares all four on the same source.'],
+    ['Lock it in with flashcards','Recall each concept cold: what it is, how you would draw it, and the defining angle or distance. Two clean passes marks it mastered.'],
+    ['Test the connections','The quiz checks the numbers (90°, 110°, 17 cm, 3:1), the categories (coincident vs near vs spaced), and the reasons (why M/S needs a good room, why X/Y is mono-safe).']
+  ];
+  const wrap=el('div',{class:'steps'});
+  steps.forEach(s=>wrap.append(el('div',{class:'step'},el('div',{class:'n'}),el('div',{},el('h3',{},s[0]),el('p',{},s[1])))));
+  view.append(wrap);
+  view.append(el('div',{class:'callout',html:'<b>For every technique, be able to:</b> draw it (source, both mics, which way each points, the angle or distance that defines it, and the polar patterns); say whether it needs <b>matching</b> mics; and say whether it is <b>coincident, near-coincident, or not coincident</b>.'}));
+  const b=el('button',{class:'btn gold'},'Continue to the Learn tab →');b.onclick=()=>setTab('learn');
+  view.append(el('div',{style:'text-align:center;margin-top:2px'},b));
+}
+
+/* ============ LEARN ============ */
+function openDetail(c){
+  const p=document.getElementById('panel');p.innerHTML='';
+  const head=el('div',{class:'head'},el('div',{class:'art',html:VIZ[c.id]()}),el('div',{},el('h2',{},c.name),el('div',{class:'sub'},G[c.group].k)),el('button',{class:'x','aria-label':'Close'},'×'));
+  head.querySelector('.x').onclick=closeDetail;
+  const body=el('div',{class:'body'});
+  body.append(el('p',{html:c.defn}));
+  if(c.facts)body.append(factsRow(c.facts));
+  if(c.callout)body.append(el('div',{class:'callout',html:c.callout}));
+  if(c.rel)body.append(el('div',{class:'note rel',html:c.rel}));
+  body.append(el('div',{class:'note why',html:'<b>Why it matters: </b>'+c.why}));
+  if(c.lab){const b=el('button',{class:'btn gold sm',style:'margin-top:14px'},'▶ Hear it in the Lab');b.onclick=()=>{closeDetail();setTab('lab');setTimeout(()=>{const t=document.getElementById('st-'+c.lab);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});},120);};body.append(b);}
+  p.append(head,body);document.getElementById('overlay').classList.add('on');
+}
+function closeDetail(){document.getElementById('overlay').classList.remove('on');}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeDetail();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+function renderLearn(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'11 concepts'),el('h1',{class:'page'},'Learn'));
+  ['space','tone','image','tech'].forEach(g=>{
+    view.append(el('div',{class:'grouphead'},el('div',{class:'k'},G[g].k),el('div',{class:'t'},G[g].t),el('div',{class:'d'},G[g].d)));
+    const grid=el('div',{class:'grid'});
+    C.filter(c=>c.group===g).forEach(c=>{
+      const card=el('div',{class:'ccard',tabindex:'0',role:'button'},el('div',{class:'art',html:VIZ[c.id]()}),el('h3',{},c.name),el('p',{},c.short));
+      card.onclick=()=>openDetail(c);card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openDetail(c);}};
+      grid.append(card);
+    });
+    view.append(grid);
+  });
+  const b=el('button',{class:'btn gold'},'Go to the Lab →');b.onclick=()=>setTab('lab');
+  view.append(el('div',{style:'text-align:center;margin-top:26px'},b));
+}
+
+/* ============ LAB ============ */
+function station(id,title,sub){return el('div',{class:'station',id:'st-'+id},el('h3',{},title),el('div',{class:'ssub'},sub));}
+function ctlRow(label,input,valEl){return el('div',{class:'ctl'},el('label',{},label),input,valEl);}
+function segRow(label,items,cur,onPick){const seg=el('div',{class:'segs'});const btns=items.map(([k,l])=>{const b=el('button',{class:'btn tog sm','aria-pressed':String(k===cur)},l);b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');onPick(k);};seg.append(b);return b;});return el('div',{class:'ctl'},el('label',{},label),seg,el('div',{}));}
+function slider(min,max,step,val){return el('input',{type:'range',min:String(min),max:String(max),step:String(step),value:String(val)});}
+const VIEWS={ab:{x0:-2.5,x1:2.5,y0:-0.45,y1:2.0,ymin:0.15,ymax:1.8,xlim:2.3},wide:{x0:-4.4,x1:4.4,y0:-1.6,y1:5.6,ymin:0.5,ymax:5.2,xlim:4}};
+const TECH_NAME={ab:'A/B',xy:'X/Y',ortf:'ORTF',ms:'M/S'};
+
+function stereoStation(cfg){
+  const S=Object.assign({tech:'xy',spacing:1.2,abPat:'omni',width:1,k:0.7,listen:'dec',room:'dry',mono:false,srcType:'piano',x:-1,y:3},cfg.init||{});
+  const V=VIEWS[cfg.view];
+  const st=station(cfg.id,cfg.title,cfg.sub);
+  let factsHost=el('div');st.append(factsHost);
+  const setFacts=()=>{factsHost.innerHTML='';factsHost.append(factsRow(S.tech));};setFacts();
+  const cv=el('canvas');st.append(el('div',{class:'scope arena'},cv));
+  view.append(st);
+  const sim={S,playing:false,setPlaying:null};
+  const apply=()=>applySim(sim);
+  // controls
+  if(cfg.techSel)st.append(segRow('Technique',[['ab','A/B'],['xy','X/Y'],['ortf','ORTF'],['ms','M/S']],S.tech,k=>{S.tech=k;setFacts();buildModeRows();apply();}));
+  const xIn=slider(-V.xlim,V.xlim,0.01,S.x),xVal=el('div',{class:'val'});
+  const yIn=slider(V.ymin,V.ymax,0.01,S.y),yVal=el('div',{class:'val'});
+  const posTxt=()=>{xVal.textContent=(Math.abs(S.x)<0.02?'center':(Math.abs(S.x).toFixed(2)+' m '+(S.x<0?'L':'R')));yVal.textContent=S.y.toFixed(2)+' m';};
+  xIn.oninput=()=>{S.x=+xIn.value;posTxt();apply();};yIn.oninput=()=>{S.y=+yIn.value;posTxt();apply();};
+  st.append(ctlRow('Source L↔R',xIn,xVal),ctlRow(cfg.view==='ab'?'Distance (d)':'Source distance',yIn,yVal));posTxt();
+  const modeHost=el('div');st.append(modeHost);
+  function buildModeRows(){
+    modeHost.innerHTML='';
+    if(S.tech==='ab'&&(cfg.abControls)){
+      const sIn=slider(0.3,4,0.05,S.spacing),sVal=el('div',{class:'val'},S.spacing.toFixed(2)+' m');
+      sIn.oninput=()=>{S.spacing=+sIn.value;sVal.textContent=S.spacing.toFixed(2)+' m';apply();};
+      modeHost.append(ctlRow('Mic spacing',sIn,sVal));
+      modeHost.append(segRow('Patterns',[['omni','Omni pair'],['card','Cardioid pair']],S.abPat,k=>{S.abPat=k;apply();}));
+    }
+    if(S.tech==='ms'){
+      const kIn=slider(0,1.5,0.01,S.k),kVal=el('div',{class:'val'},Math.round(S.k*100)+'%');
+      kIn.oninput=()=>{S.k=+kIn.value;kVal.textContent=Math.round(S.k*100)+'%';apply();};
+      modeHost.append(ctlRow('Side level',kIn,kVal));
+      if(cfg.listen)modeHost.append(segRow('Listen to',[['dec','Decoded L/R'],['mid','Mid only'],['side','Side only']],S.listen,k=>{S.listen=k;apply();}));
+    } else {
+      const wIn=slider(0,1,0.01,S.width),wVal=el('div',{class:'val'});
+      const wTxt=()=>{wVal.textContent=S.width<0.01?'0% · center':Math.round(S.width*100)+'% L/R';};wTxt();
+      wIn.oninput=()=>{S.width=+wIn.value;wTxt();apply();};
+      modeHost.append(ctlRow('Pan width',wIn,wVal));
+    }
+  }
+  buildModeRows();
+  if(cfg.room)st.append(segRow('Room',[['hall','Concert hall'],['closet','Closet'],['dry','Dry']],S.room,k=>{S.room=k;apply();}));
+  st.append(segRow('Source',[['piano','Piano phrase'],['burst','Noise bursts']],S.srcType,k=>{S.srcType=k;if(sim.playing)start();}));
+  const btn=el('button',{class:'btn gold'},'▶ Play');
+  const monoBtn=el('button',{class:'btn tog','aria-pressed':'false'},'Mono sum: OFF');
+  monoBtn.onclick=()=>{S.mono=!S.mono;monoBtn.setAttribute('aria-pressed',String(S.mono));monoBtn.textContent='Mono sum: '+(S.mono?'ON':'OFF');apply();};
+  const rd=el('div',{class:'readout'});
+  st.append(el('div',{class:'lab-actions'},btn,monoBtn,rd));
+  st.append(el('div',{class:'tip',html:cfg.tip}));
+  if(cfg.notice)st.append(el('div',{class:'notice',html:cfg.notice}));
+  sim.setPlaying=on=>{sim.playing=on;if(on){btn.textContent='■ Stop';btn.classList.replace('gold','primary');}else{btn.textContent='▶ Play';btn.classList.replace('primary','gold');}};
+  function start(){startChain((c,g)=>buildSim(c,g,S),0.5);if(chain){activeSim=sim;sim.setPlaying(true);apply();}}
+  btn.onclick=()=>{if(sim.playing)stopAudio();else start();};
+
+  // drag on the stage
+  let L=null,dragging=false;
+  function toWorld(e){const r=cv.getBoundingClientRect();const px=e.clientX-r.left,py=e.clientY-r.top;if(!L)return null;return{x:(px-L.cx)/L.sc,y:(L.by-py)/L.sc+0,inStage:py<L.stageH};}
+  function setSrc(p){S.x=clamp(p.x,-V.xlim,V.xlim);S.y=clamp(p.y,V.ymin,V.ymax);xIn.value=S.x;yIn.value=S.y;posTxt();apply();}
+  cv.addEventListener('pointerdown',e=>{const p=toWorld(e);if(!p||!p.inStage)return;dragging=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}setSrc(p);});
+  cv.addEventListener('pointermove',e=>{if(!dragging)return;const p=toWorld(e);if(p)setSrc(p);});
+  ['pointerup','pointercancel'].forEach(ev=>cv.addEventListener(ev,()=>{dragging=false;}));
+
+  const cx=cv.getContext('2d');let lastRd='';
+  animate(t=>{ready(cv,cx);const w=cv.clientWidth,h=cv.clientHeight;cx.clearRect(0,0,w,h);
+    const R=rig(S),sol=solve(R,S),M=matrix(S,R);
+    const stripH=112,stageH=h-stripH;const sc=Math.min(w/(V.x1-V.x0),(stageH-10)/(V.y1-V.y0));const ccx=w/2,by=Math.min(stageH-8+V.y0*sc,stageH-58);
+    L={cx:ccx,by,sc,stageH};const X=x=>ccx+x*sc,Y=y=>by-y*sc;
+    // grid
+    cx.strokeStyle='rgba(255,255,255,0.05)';cx.lineWidth=1;const gstep=cfg.view==='ab'?0.5:1;
+    for(let gx=Math.ceil(V.x0/gstep)*gstep;gx<=V.x1;gx+=gstep){cx.beginPath();cx.moveTo(X(gx),0);cx.lineTo(X(gx),stageH);cx.stroke();}
+    for(let gy=0;gy<=V.y1;gy+=gstep){cx.beginPath();cx.moveTo(0,Y(gy));cx.lineTo(w,Y(gy));cx.stroke();}
+    cx.fillStyle='rgba(255,255,255,0.35)';cx.font='10px monospace';{const gt='grid = '+(gstep===1?'1 m':'50 cm');cx.fillText(gt,w-cx.measureText(gt).width-8,14);}
+    // room hint
+    if(cfg.room&&S.room!=='dry'){const col=S.room==='hall'?'rgba(62,156,146,':'rgba(199,85,62,';const my=Y(0);
+      for(const sd of [-1,1]){const x0=sd<0?8:w-8;cx.strokeStyle=col+'0.55)';cx.lineWidth=1.5;cx.setLineDash([5,4]);
+        for(let k=-1;k<=1;k++){cx.beginPath();cx.moveTo(x0,my-30+k*26);cx.lineTo(X(0)-sd*74,my-6+k*6);cx.stroke();}cx.setLineDash([]);}
+      cx.fillStyle=col+'0.85)';cx.fillText(S.room==='hall'?'hall reflections from the sides':'closet reflections from the sides',8,Y(0)-62);}
+    // mic pixel positions
+    const mp=R.mics.map(m=>({x:X(m.x),y:Y(m.y)}));
+    if(S.tech==='ortf'){const d=Math.max(0.085*sc,16);mp[0].x=ccx-d;mp[1].x=ccx+d;}
+    // source → mic paths
+    const sx=X(S.x),sy=Y(S.y);
+    cx.strokeStyle='rgba(255,255,255,0.18)';cx.setLineDash([3,4]);mp.forEach(p=>{cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(p.x,p.y);cx.stroke();});cx.setLineDash([]);
+    // polar patterns
+    const cols=['rgba(224,164,88,','rgba(62,156,146,'];
+    R.mics.forEach((m,i)=>{const p=mp[i],Rp=(S.tech==='ab'?28:(m.p==='fig8'?58:50))*clamp(w/760,0.62,1);const axS=Math.atan2(m.ax,m.ay);// angle from screen-up
+      cx.beginPath();for(let a=0;a<=360;a+=4){const ar=a*Math.PI/180,mag=Math.abs(pat(m.p,Math.cos(ar)))*Rp,g=axS+ar;const px=p.x+mag*Math.sin(g),py=p.y-mag*Math.cos(g);a?cx.lineTo(px,py):cx.moveTo(px,py);}cx.closePath();
+      cx.fillStyle=cols[i]+'0.13)';cx.fill();cx.strokeStyle=cols[i]+'0.95)';cx.lineWidth=2;cx.stroke();
+      cx.strokeStyle='#cfdaec';cx.lineWidth=3;cx.lineCap='round';cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(p.x+13*Math.sin(axS),p.y-13*Math.cos(axS));cx.stroke();cx.lineCap='butt';
+      cx.fillStyle='#cfdaec';cx.beginPath();cx.arc(p.x,p.y,3.5,0,7);cx.fill();
+      if(m.p==='fig8'){cx.fillStyle='rgba(62,156,146,0.95)';cx.font='bold 13px monospace';cx.fillText('+',p.x+(Rp+12)*Math.sin(axS)-4,p.y-(Rp+12)*Math.cos(axS)+5);cx.fillText('−',p.x-(Rp+12)*Math.sin(axS)-4,p.y+(Rp+12)*Math.cos(axS)+5);}
+    });
+    // labels & dimensions
+    cx.font='11px monospace';
+    if(S.tech==='ab'){const yb=Y(0)+30;cx.strokeStyle='rgba(255,255,255,0.6)';cx.lineWidth=1;cx.beginPath();cx.moveTo(mp[0].x,yb);cx.lineTo(mp[1].x,yb);cx.moveTo(mp[0].x,yb-5);cx.lineTo(mp[0].x,yb+5);cx.moveTo(mp[1].x,yb-5);cx.lineTo(mp[1].x,yb+5);cx.stroke();
+      cx.fillStyle='rgba(255,255,255,0.75)';const lab='spacing '+S.spacing.toFixed(2)+' m';cx.fillText(lab,(mp[0].x+mp[1].x)/2-cx.measureText(lab).width/2,yb+16);
+      cx.strokeStyle='rgba(224,164,88,0.6)';cx.setLineDash([4,3]);cx.beginPath();cx.moveTo(sx,Y(0));cx.lineTo(sx,sy);cx.stroke();cx.setLineDash([]);
+      cx.fillStyle='rgba(224,164,88,0.9)';cx.fillText('d = '+S.y.toFixed(2)+' m',sx+6,(Y(0)+sy)/2);
+      if(cfg.view==='ab'){const ratio=S.spacing/S.y,ok=ratio>=2.95;cx.font='bold 13px monospace';cx.fillStyle=ok?'#3E9C92':'#C7553E';cx.fillText(ratio.toFixed(1)+' : 1 '+(ok?'✓ meets 3:1':'✗ under 3:1'),10,18);cx.font='11px monospace';}
+      cx.font='bold 12px monospace';cx.fillStyle='rgba(224,164,88,0.95)';cx.fillText('A',mp[0].x-44,Y(0)+5);cx.fillStyle='rgba(62,156,146,0.95)';cx.fillText('B',mp[1].x+36,Y(0)+5);cx.font='11px monospace';}
+    if(S.tech==='xy'||S.tech==='ortf'){const deg=S.tech==='xy'?90:110,half=deg/2*Math.PI/180,mx=ccx,my=Y(0),rr=64;
+      cx.strokeStyle='rgba(255,255,255,0.6)';cx.lineWidth=1;cx.beginPath();cx.arc(mx,my,rr,-Math.PI/2-half,-Math.PI/2+half);cx.stroke();
+      cx.fillStyle='rgba(255,255,255,0.85)';cx.fillText(deg+'°',mx-12,my-rr-6);
+      if(S.tech==='ortf'){const yb=my+36;cx.beginPath();cx.moveTo(mp[0].x,yb);cx.lineTo(mp[1].x,yb);cx.stroke();cx.fillText('17 cm (not to scale)',mx-64,yb+15);}
+      else cx.fillText('capsules stacked at one point',mx-98,my+40);
+      cx.fillStyle='rgba(224,164,88,0.95)';cx.fillText('L',mp[0].x-62,my-18);cx.fillStyle='rgba(62,156,146,0.95)';cx.fillText('R',mp[1].x+56,my-18);}
+    if(S.tech==='ms'){const my=Y(0);cx.fillStyle='rgba(224,164,88,0.95)';{const t1='M · cardioid → source';cx.fillText(t1,Math.min(ccx+14,w-cx.measureText(t1).width-6),my-56*clamp(w/760,0.62,1)-4);}cx.fillStyle='rgba(62,156,146,0.95)';{const t2='S · figure-8, null → source';cx.fillText(t2,ccx-cx.measureText(t2).width/2,my+48*clamp(w/760,0.62,1)+6);}}
+    // source
+    const pulse=3+1.5*Math.sin(t/250);cx.fillStyle='#3E9C92';cx.beginPath();cx.arc(sx,sy,7,0,7);cx.fill();cx.strokeStyle='rgba(62,156,146,0.45)';cx.lineWidth=2;cx.beginPath();cx.arc(sx,sy,8+pulse,0,7);cx.stroke();
+    cx.fillStyle='rgba(255,255,255,0.55)';cx.font='10px monospace';cx.fillText('source · drag',sx+12,sy-10);
+    // ---- strip: image meter + mono response
+    const sy0=h-stripH+6,half=w/2;
+    cx.fillStyle='rgba(255,255,255,0.04)';cx.fillRect(4,sy0,half-10,stripH-12);cx.fillRect(half+6,sy0,half-10,stripH-12);
+    cx.fillStyle='rgba(255,255,255,0.5)';cx.font='10px monospace';cx.fillText('STEREO IMAGE (approx.)',12,sy0+14);cx.fillText(S.mono?'MONO SUM IS ON':'IF SUMMED TO MONO',half+14,sy0+14);const narrow=w<560;
+    const tx0=34,tx1=half-34,ty=sy0+54;
+    cx.fillStyle='#cfdaec';cx.fillRect(tx0-24,ty-9,14,18);cx.fillRect(tx1+10,ty-9,14,18);cx.fillStyle='rgba(255,255,255,0.6)';cx.fillText('L',tx0-21,ty+24);cx.fillText('R',tx1+13,ty+24);
+    cx.strokeStyle='rgba(255,255,255,0.18)';cx.lineWidth=4;cx.lineCap='round';cx.beginPath();cx.moveTo(tx0,ty);cx.lineTo(tx1,ty);cx.stroke();cx.lineCap='butt';
+    const ip=imagePos(S,R,sol,M),ix=(tx0+tx1)/2+ip*(tx1-tx0)/2;
+    cx.fillStyle='#E0A458';cx.beginPath();cx.arc(ix,ty,7,0,7);cx.fill();
+    cx.fillStyle='rgba(255,255,255,0.55)';const it=S.mono?'everything collapses to center':(Math.abs(ip)<0.06?'center':Math.round(Math.abs(ip)*100)+'% '+(ip<0?'left':'right'));cx.fillText(it,(tx0+tx1)/2-cx.measureText(it).width/2,ty+26);
+    // mono response
+    const rx0=half+16,rx1=w-14,ry0=sy0+(w<560?34:22),ry1=sy0+stripH-30,N=140,resp=monoResp(sol,M,N);
+    cx.strokeStyle='rgba(255,255,255,0.08)';cx.lineWidth=1;[100,1000,10000].forEach(f=>{const x=rx0+(rx1-rx0)*Math.log(f/20)/Math.log(1000);cx.beginPath();cx.moveTo(x,ry0);cx.lineTo(x,ry1);cx.stroke();});
+    cx.fillStyle='rgba(255,255,255,0.4)';[[100,'100'],[1000,'1k'],[10000,'10k']].forEach(([f,l])=>cx.fillText(l,rx0+(rx1-rx0)*Math.log(f/20)/Math.log(1000)-8,ry1+12));
+    let deep=0;cx.strokeStyle=S.tech==='ms'||S.tech==='xy'?'#3E9C92':'#E0A458';cx.lineWidth=2;cx.beginPath();
+    for(let i=0;i<N;i++){const v=Math.max(resp[i],-30);deep=Math.min(deep,resp[i]);const x=rx0+(rx1-rx0)*i/(N-1),y=ry0+(-v/30)*(ry1-ry0);i?cx.lineTo(x,y):cx.moveTo(x,y);}cx.stroke();
+    cx.fillStyle=deep<-6?'#C7553E':deep<-1.5?'#E0A458':'#3E9C92';const mt=deep<-6?'comb filtering':deep<-1.5?'mild comb filtering':'flat = mono-safe';cx.fillText(mt,narrow?half+14:rx1-cx.measureText(mt).width,narrow?sy0+27:sy0+14);
+    // readout
+    let txt;
+    if(R.mode==='ms'){txt='Side <b>'+Math.round(S.k*100)+'%</b> · '+(S.listen==='dec'?'L = M+S, R = M−S':S.listen==='mid'?'Mid only':'Side only')+(cfg.room?' · '+ROOM_NAME[S.room]:'')+(S.mono?' · mono: Side cancels':'');}
+    else{const g0=sol[0].g[0],g1=sol[1].g[0],dL=20*Math.log10(Math.max(g0,1e-4)/Math.max(g1,1e-4)),dT=(sol[0].d[0]-sol[1].d[0])*1000;
+      txt='Level diff <b>'+Math.abs(dL).toFixed(1)+' dB</b> · Time diff <b>'+Math.abs(dT).toFixed(2)+' ms</b>';
+      if(S.tech==='ab'){const ratio=S.spacing/S.y;txt+=' · <span class="'+(ratio>=2.95?'good':'bad')+'">'+ratio.toFixed(1)+':1</span>';}}
+    if(cfg.techSel)txt='<b>'+TECH_NAME[S.tech]+'</b> · '+txt;
+    if(txt!==lastRd){rd.innerHTML=txt;lastRd=txt;}
+  });
+}
+
+function renderLab(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Hear it · headphones required'),el('h1',{class:'page'},'Lab'),
+    el('p',{class:'lead'},'Each station is drawn from above, the way you draw it on paper: the source at the top, the two mics below with their polar patterns. Drag the source (or use the sliders) and listen to the image move. Then flip Mono sum. Everything is synthesized, and the stage is a simplified free-field model: level and time-of-arrival only. Start quiet.'));
+  stereoStation({id:'ab',view:'ab',title:'A/B · Spaced pair',sub:'Two mics apart, both aimed at the source, here set up like a pair over a grand piano. Set the spacing to at least 3× the distance (the 3:1 rule).',
+    init:{tech:'ab',spacing:1.2,abPat:'omni',x:-0.55,y:0.4},abControls:true,
+    tip:'<b>Notice:</b> drag the source right up to mic A. Mic B hears it about 10 dB quieter; that’s the 3:1 rule doing its job. Now pull the distance up (or the spacing down) until the ratio drops under 3:1, then turn <b>Mono sum</b> on: the level difference shrinks, the time difference stays, and the mono curve fills with notches. <b>Hole in the middle:</b> set a wide spacing and slowly drag the source across the center. The image jumps from speaker to speaker instead of moving smoothly.'});
+  stereoStation({id:'xy',view:'wide',title:'X/Y · Coincident',sub:'Two matching cardioids at one point, exactly 90° apart. Image from level only.',
+    init:{tech:'xy',x:-1.2,y:3},
+    tip:'<b>Notice:</b> drag the source anywhere and flip <b>Mono sum</b>. The curve stays flat because both capsules hear it at the same instant, so there is nothing to cancel. The image moves smoothly but stays narrower than A/B. Try <b>Pan width</b> at 100%, 50%, and 0%.'});
+  stereoStation({id:'ortf',view:'wide',title:'ORTF · Near-coincident',sub:'Two matching cardioids, 17 cm apart, 110° between them. About the spacing of your ears.',
+    init:{tech:'ortf',x:-1.2,y:3},
+    tip:'<b>Notice:</b> compared with X/Y the image is wider, because the 17 cm spacing adds small time differences. Put the source off to one side and flip <b>Mono sum</b>: a few notches appear up high. Near-coincident means mostly mono-safe, not perfectly.'});
+  stereoStation({id:'ms',view:'wide',title:'M/S · Mid/Side',sub:'A cardioid Mid aimed at the source; a figure-8 Side at 90°, lobes to the sides of the room. Decoded: L = M+S, R = M−S.',
+    init:{tech:'ms',x:-0.6,y:3,k:0.6,room:'hall'},room:true,listen:true,
+    tip:'<b>Notice:</b> start with <b>Side level</b> at 0%: pure Mid, which is mono. Bring the Side up and the image widens and the hall blooms around the source. Switch to <b>Listen to: Side only</b> to hear what the figure-8 picks up, mostly room. Now choose <b>Closet</b> and repeat: the same move turns up a boxy, ugly room. Finally flip <b>Mono sum</b>: the Side cancels completely and only the Mid is left.',
+    notice:'<b>The rule to remember:</b> use M/S when the room sounds great. In a concert hall, the Side brings up a beautiful room. In a closet or a bad room, it brings up the bad room.'});
+  stereoStation({id:'compare',view:'wide',title:'Compare all four',sub:'Same source, same spot, same room. Switch techniques and listen to width, image, and what each loses in mono.',
+    init:{tech:'ab',spacing:1.0,abPat:'omni',x:-1.4,y:3,k:0.7,room:'hall'},techSel:true,room:true,abControls:true,
+    tip:'<b>Notice:</b> keep the source in one spot and step through all four. Listen for width first, then flip <b>Mono sum</b> and step through again. A/B loses the most (here it’s far below 3:1), ORTF loses a little up high, and X/Y and M/S lose nothing.'});
+}
+
+/* ============ flashcards ============ */
+let fcQueue=[];
+function renderCards(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Active recall'),el('h1',{class:'page'},'Flashcards'),
+    el('p',{class:'lead'},'See the concept. Out loud, define it, say how you would draw it, and give the number that defines it (angle, distance, or ratio). For a technique, add whether it needs matching mics and how coincident it is. Reveal to check, and mark “Got it” only when you had it.'));
+  const t=el('div',{class:'lab-actions'},el('button',{class:'btn ghost sm'},'Restart deck'),el('button',{class:'btn ghost sm'},'Drill the unmastered'));
+  view.append(t,el('div',{id:'fcHost'}));
+  t.children[0].onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};
+  t.children[1].onclick=()=>{const weak=C.filter(c=>(store.mastered[c.id]||0)<2).map(c=>c.id);fcQueue=shuffle(weak.length?weak:C.map(c=>c.id));drawCard();};
+  if(!fcQueue.length)fcQueue=shuffle(C.map(c=>c.id));drawCard();
+}
+function drawCard(){
+  const host=document.getElementById('fcHost');if(!host)return;host.innerHTML='';
+  if(!fcQueue.length){host.append(el('div',{class:'stage'},el('div',{class:'bigscore',html:'✓'}),el('p',{class:'prompt'},'Deck complete. '+masteredCount()+' of '+TOTAL+' mastered.'),el('div',{class:'actions'},el('button',{class:'btn primary'},'Go again'))));host.querySelector('.btn').onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};return;}
+  const c=byId[fcQueue[0]],done=TOTAL-fcQueue.length+1;
+  const stage=el('div',{class:'stage'},el('div',{class:'counter'},'Card '+done+' of '+TOTAL+(((store.mastered[c.id]||0)>=2)?' · mastered':'')),
+    el('h3',{style:'margin:10px 0 0;font-size:22px'},c.name),el('div',{class:'prompt'},G[c.group].k+(c.group==='tech'?'. Draw it, then: matching? coincident?':'')),el('div',{id:'fcReveal'}));
+  host.append(stage);
+  const rev=stage.querySelector('#fcReveal');rev.append(el('div',{class:'actions'},el('button',{class:'btn primary'},'Reveal answer')));
+  rev.querySelector('.btn').onclick=()=>showBack(c);
+}
+function showBack(c){
+  const rev=document.getElementById('fcReveal');rev.innerHTML='';
+  const block=el('div',{class:'reveal'},el('div',{class:'art',style:'height:130px;padding:8px;margin:0 auto 12px;max-width:320px',html:VIZ[c.id]()}),el('p',{html:c.defn}));
+  if(c.facts)block.append(factsRow(c.facts));
+  if(c.rel)block.append(el('div',{class:'note rel',html:c.rel}));
+  block.append(el('div',{class:'note why',html:'<b>Why it matters: </b>'+c.why}));
+  rev.append(block,el('div',{class:'actions'},el('button',{class:'btn again'},'Review again'),el('button',{class:'btn ok'},'Got it')));
+  const[a,o]=rev.querySelectorAll('.actions .btn');
+  a.onclick=()=>{fcQueue.push(fcQueue.shift());drawCard();};
+  o.onclick=()=>{store.mastered[c.id]=(store.mastered[c.id]||0)+1;save();refreshProgress();fcQueue.shift();drawCard();};
+}
+
+/* ============ quiz ============ */
+const QPOOL=[
+ {q:'Two matching cardioids at the same point with exactly 90° between them is:',opts:['X/Y','ORTF','A/B','M/S'],a:'X/Y',ex:'<b>X/Y</b>: perfectly coincident, 90°, matching cardioids, capsules stacked.'},
+ {q:'ORTF places two matching cardioids:',opts:['17 cm apart, angled 110°','At one point, angled 90°','3 ft apart, parallel','At one point, one cardioid and one figure-8'],a:'17 cm apart, angled 110°',ex:'<b>17 cm (6¾ in) and 110°</b>, roughly the spacing of your ears.'},
+ {q:'ORTF is classified as:',opts:['Near-coincident','Coincident','Not coincident','Mono'],a:'Near-coincident',ex:'<b>Near-coincident.</b> A small spacing plus an angle: level and a little time.'},
+ {q:'A/B (spaced pair) is classified as:',opts:['Not coincident','Coincident','Near-coincident','Perfectly coincident'],a:'Not coincident',ex:'<b>Not coincident.</b> The mics are apart, so time-of-arrival differences build the image.'},
+ {q:'Which technique uses complementary (non-matching) mics?',opts:['M/S','X/Y','ORTF','None of them'],a:'M/S',ex:'<b>M/S</b> pairs a cardioid Mid with a figure-8 Side.'},
+ {q:'In M/S, the Side mic is a:',opts:['Figure-8 turned 90° from the source','Cardioid aimed at the source','Omni above the source','Second cardioid at 110°'],a:'Figure-8 turned 90° from the source',ex:'Its <b>null faces the source</b>; its lobes face the sides of the room.'},
+ {q:'M/S is decoded to stereo as:',opts:['L = M + S, R = M − S','L = M, R = S','L = S − M, R = M + S','L = M × S, R = M ÷ S'],a:'L = M + S, R = M − S',ex:'In a DAW: Mid center; Side duplicated, one copy polarity-flipped, panned hard L/R.'},
+ {q:'Sum a decoded M/S recording to mono and you get:',opts:['Only the Mid. The Side cancels.','Only the Side','Heavy comb filtering','Silence'],a:'Only the Mid. The Side cancels.',ex:'(M+S) + (M−S) = 2M. <b>Perfectly mono-compatible.</b>'},
+ {q:'M/S is the best choice when:',opts:['The room sounds great, like a concert hall','You’re recording in a closet','The room sounds bad and you need width','You only have two omni mics'],a:'The room sounds great, like a concert hall',ex:'The Side mic mostly hears the <b>room</b>. A great room makes great M/S; a bad room just gets turned up.'},
+ {q:'Why is X/Y 100% mono-compatible?',opts:['Both capsules hear the sound at the same instant','It uses omni mics','The mics are 3 ft apart','It uses a figure-8'],a:'Both capsules hear the sound at the same instant',ex:'No time difference means <b>nothing to comb-filter</b> when L and R are summed.'},
+ {q:'A/B pair over a grand piano, mics 1 ft above the strings. By the 3:1 rule the mics should be at least:',opts:['3 ft apart','1 ft apart','17 cm apart','6 ft above the strings'],a:'3 ft apart',ex:'<b>3:1</b>: spacing ≥ 3 × the mic-to-source distance.'},
+ {q:'The “hole in the middle” is caused by:',opts:['Spacing an A/B pair much wider than the source','Angling X/Y at 90°','Too much Side in M/S','Using matching mics'],a:'Spacing an A/B pair much wider than the source',ex:'Center sounds reach both mics weak and late, so the image piles up at the speakers.'},
+ {q:'Summing a spaced pair to mono can cause:',opts:['Comb filtering','A wider image','Proximity effect','Aliasing'],a:'Comb filtering',ex:'Time-of-arrival differences make the summed copies interfere, giving a thin, hollow, phasey sound.'},
+ {q:'Panning both mics of a pair to 0% (both center) gives:',opts:['A mono image','The widest image','A 50% image','An M/S decode'],a:'A mono image',ex:'100/100 is widest, 50/50 is narrower, and 0/0 collapses to <b>mono</b>.'},
+ {q:'ORTF was designed to mimic:',opts:['The spacing between our two ears','A grand piano’s width','A concert hall’s reflections','A figure-8 pattern'],a:'The spacing between our two ears',ex:'Developed at the French broadcaster ORTF; <b>17 cm is about head width</b>.'},
+ {q:'In X/Y, the capsules are physically arranged:',opts:['Stacked one above the other at one point','Side by side, 17 cm apart','Several feet apart','Back to back'],a:'Stacked one above the other at one point',ex:'Stacking puts both capsules at <b>the same point</b>, which makes it truly coincident.'},
+ {q:'In M/S, which mic is aimed directly at the source?',opts:['The Mid (cardioid)','The Side (figure-8)','Both','Neither'],a:'The Mid (cardioid)',ex:'The <b>Mid</b> captures the source; the Side faces the sides.'}
+];
+let quiz={list:[],i:0,score:0,wrong:[]};
+function renderQuiz(){clearAnims();stopAudio();view.innerHTML='';view.append(el('div',{class:'eyebrow'},'Check the connections'),el('h1',{class:'page'},'Quiz'),el('div',{id:'qHost'}));startQuiz();}
+function startQuiz(){quiz={list:shuffle(QPOOL).slice(0,10),i:0,score:0,wrong:[]};drawQ();}
+function drawQ(){
+  const host=document.getElementById('qHost');if(!host)return;host.innerHTML='';
+  if(quiz.i>=quiz.list.length){if(quiz.score>store.quizBest){store.quizBest=quiz.score;save();}
+    const stage=el('div',{class:'stage'},el('div',{class:'bigscore',html:quiz.score+'<span>/'+quiz.list.length+'</span>'}),
+      el('p',{class:'prompt'},quiz.score===quiz.list.length?'Perfect. You could draw all four from memory.':quiz.score>=8?'Strong. Clean up the few below.':'Good start. Revisit these in Learn and the Lab, then run it again.'),
+      el('div',{class:'scorebar'},'Best so far: '+store.quizBest+'/10'));
+    if(quiz.wrong.length){stage.append(el('div',{class:'explain on',style:'max-width:520px'},el('b',{},'Worth another look: '),quiz.wrong.join('; ')));}
+    stage.append(el('div',{class:'actions'},el('button',{class:'btn primary'},'New quiz'),el('button',{class:'btn ghost'},'Back to the Lab')));
+    host.append(stage);const[a,b]=stage.querySelectorAll('.actions .btn');a.onclick=startQuiz;b.onclick=()=>setTab('lab');return;}
+  const item=quiz.list[quiz.i];const stage=el('div',{class:'stage'});
+  stage.append(el('div',{class:'scorebar'},'Question '+(quiz.i+1)+' of '+quiz.list.length+' · Score '+quiz.score));
+  stage.append(el('div',{class:'prompt',style:'font-size:16px;color:var(--ink)'},item.q));
+  const opts=el('div',{class:'opts'});shuffle(item.opts).forEach(o=>{const b=el('button',{class:'opt'},o);b.onclick=()=>answerQ(b,o,item,stage);opts.append(b);});
+  stage.append(opts,el('div',{class:'explain',id:'qEx'}));host.append(stage);
+}
+function answerQ(btn,choice,item,stage){
+  stage.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.textContent===item.a)b.classList.add('correct');});
+  if(choice===item.a)quiz.score++;else{btn.classList.add('wrong');quiz.wrong.push(item.a);}
+  const ex=stage.querySelector('#qEx');ex.innerHTML=item.ex;ex.classList.add('on');
+  const next=el('div',{class:'actions'},el('button',{class:'btn primary'},quiz.i===quiz.list.length-1?'See results':'Next'));
+  ex.after(next);next.querySelector('.btn').onclick=()=>{quiz.i++;drawQ();};
+}
+
+/* ============ tabs ============ */
+const RENDER={howto:renderHowto,learn:renderLearn,lab:renderLab,cards:renderCards,quiz:renderQuiz};
+function setTab(name){document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name));clearAnims();stopAudio();RENDER[name]();window.scrollTo({top:0});}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+refreshProgress();setTab('howto');
+</script>
+</body>
+</html>
