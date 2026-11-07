@@ -139,7 +139,7 @@
     <svg viewBox="0 0 30 30"><circle cx="15" cy="11" r="7" fill="none" stroke="#E0A458" stroke-width="2"/><path d="M15 4 a7 7 0 0 1 0 14" fill="#E0A458" opacity=".5"/><line x1="15" y1="18" x2="15" y2="25" stroke="#E0A458" stroke-width="2"/><line x1="9" y1="25" x2="21" y2="25" stroke="#E0A458" stroke-width="2"/></svg>
     <div>Microphones<small>Active study · University of Evansville &nbsp;•&nbsp; Creative Technologies &nbsp;•&nbsp; Prof. Jon Robertson</small></div>
   </div>
-  <div class="prog" id="prog">Mastered <b><span id="pm">0</span>/15</b><div class="bar"><i id="pbar"></i></div></div>
+  <div class="prog" id="prog">Mastered <b><span id="pm">0</span>/19</b><div class="bar"><i id="pbar"></i></div></div>
 </div>
 <nav class="tabs" id="tabs" role="tablist">
   <button role="tab" data-tab="howto" aria-selected="true">How to use this</button>
@@ -159,6 +159,7 @@ function polarR(p,deg){const t=deg*Math.PI/180;switch(p){
   case'cardioid':return (1+Math.cos(t))/2;
   case'super':return 0.37+0.63*Math.cos(t);
   case'hyper':return 0.25+0.75*Math.cos(t);
+  case'shotgun':{const c=Math.cos(t);return Math.pow((1+c)/2,3)+0.18*Math.pow(Math.max(-c,0),3);}
   case'fig8':return Math.cos(t);}return 1;}
 function polarPathSVG(p,cx,cy,R){let d='';for(let a=0;a<=360;a+=4){const m=Math.abs(polarR(p,a));const r=R*m;const x=cx+r*Math.sin(a*Math.PI/180);const y=cy-r*Math.cos(a*Math.PI/180);d+=(a?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}return d+'Z';}
 
@@ -189,6 +190,10 @@ const VIZ={
  offaxis:()=>`<svg viewBox='0 0 220 96'>${micBody(40)}<path d='M62 26 H150' stroke='#3E9C92' stroke-width='2.4'/><text x='96' y='20' font-size='9' fill='#22685f' font-family='monospace'>on-axis: full</text><path d='M62 40 L150 70' stroke='#C77E2A' stroke-width='2.4' stroke-dasharray='5 3'/><text x='96' y='86' font-size='9' fill='#8a521b' font-family='monospace'>off-axis: dull</text></svg>`,
  threeone:()=>`<svg viewBox='0 0 220 96'><circle cx='40' cy='30' r='6' fill='#C77E2A'/><circle cx='40' cy='72' r='6' fill='#C77E2A'/><rect x='66' y='25' width='10' height='12' rx='2' fill='#1B2A4A'/><rect x='66' y='67' width='10' height='12' rx='2' fill='#1B2A4A'/><line x1='46' y1='30' x2='66' y2='31' stroke='#3E9C92' stroke-width='2'/><line x1='46' y1='72' x2='66' y2='73' stroke='#3E9C92' stroke-width='2'/><line x1='72' y1='37' x2='72' y2='67' stroke='#C77E2A' stroke-width='2' stroke-dasharray='4 3'/><text x='90' y='44' font-size='10' fill='#1B2A4A' font-family='monospace'>mic gap \u2265 3\u00d7</text><text x='90' y='60' font-size='10' fill='#6B7791' font-family='monospace'>source distance</text></svg>`,
  stereo:()=>`<svg viewBox='0 0 220 96'><text x='20' y='16' font-size='9' fill='#22685f' font-family='monospace'>coincident (XY)</text><line x1='40' y1='58' x2='58' y2='40' stroke='#1B2A4A' stroke-width='2.6'/><line x1='40' y1='40' x2='58' y2='58' stroke='#3E9C92' stroke-width='2.6'/><text x='128' y='16' font-size='9' fill='#8a521b' font-family='monospace'>spaced (AB)</text><rect x='120' y='44' width='8' height='12' rx='2' fill='#1B2A4A'/><rect x='180' y='44' width='8' height='12' rx='2' fill='#C77E2A'/><line x1='128' y1='50' x2='180' y2='50' stroke='#9aa6b8' stroke-width='1.6' stroke-dasharray='4 3'/></svg>`,
+ electret:()=>`<svg viewBox='0 0 220 96'><path d='M110 18 v60' stroke='#1B2A4A' stroke-width='3'/><path d='M126 18 v60' stroke='#C77E2A' stroke-width='3'/>${[26,40,54,68].map(y=>`<text x='114' y='${y}' font-size='9' fill='#22685f' font-family='monospace'>+</text>`).join('')}<text x='60' y='90' font-size='9' fill='#6B7791' font-family='monospace'>permanent charge</text><rect x='146' y='38' width='44' height='20' rx='3' fill='#1B2A4A'/><text x='152' y='52' font-size='10' fill='#E0A458' font-family='monospace'>FET</text><text x='140' y='76' font-size='8' fill='#6B7791' font-family='monospace'>48V / battery</text>${wpath(70,96,{n:3,A:9,mid:48,st:'#9aa6b8',sw:1.8})}</svg>`,
+ splrange:()=>`<svg viewBox='0 0 220 96'><rect x='20' y='10' width='12' height='76' rx='3' fill='#eef2f8' stroke='#9aa6b8'/><rect x='20' y='10' width='12' height='14' rx='3' fill='#C7553E'/><rect x='20' y='72' width='12' height='14' fill='#9aa6b8'/><text x='40' y='20' font-size='10' fill='#a23b28' font-family='monospace'>max SPL — distortion</text><text x='40' y='52' font-size='10' fill='#1B2A4A' font-family='monospace'>usable dynamic range</text><text x='40' y='84' font-size='10' fill='#6B7791' font-family='monospace'>self-noise</text></svg>`,
+ shotgun:()=>`<svg viewBox='0 0 220 96'><g transform='translate(52,60)'><path d='${polarPathSVG('shotgun',0,0,44)}' fill='rgba(199,126,42,0.18)' stroke='#C77E2A' stroke-width='2'/></g><rect x='120' y='30' width='86' height='12' rx='4' fill='#C9D2DF' stroke='#1B2A4A' stroke-width='1.6'/>${[0,1,2,3,4,5].map(i=>`<rect x='${128+i*12}' y='33' width='6' height='6' fill='#1B2A4A'/>`).join('')}<text x='122' y='60' font-size='9' fill='#6B7791' font-family='monospace'>interference tube</text><text x='122' y='76' font-size='9' fill='#8a521b' font-family='monospace'>tight front lobe</text></svg>`,
+ impedance:()=>`<svg viewBox='0 0 220 96'><text x='10' y='22' font-size='10' fill='#1B2A4A' font-family='monospace'>LOW-Z  mic  150–600 Ω</text><path d='M10 34 H200' stroke='#3E9C92' stroke-width='3'/><text x='150' y='48' font-size='9' fill='#22685f' font-family='monospace'>long run OK</text><text x='10' y='68' font-size='10' fill='#1B2A4A' font-family='monospace'>HIGH-Z guitar  kΩ+</text><path d='M10 80 H90' stroke='#C77E2A' stroke-width='3'/><rect x='92' y='72' width='26' height='16' rx='3' fill='#1B2A4A'/><text x='96' y='84' font-size='9' fill='#E0A458' font-family='monospace'>DI</text><path d='M118 80 H200' stroke='#3E9C92' stroke-width='3'/></svg>`,
  phantom:()=>`<svg viewBox='0 0 220 96'><rect x='150' y='30' width='40' height='36' rx='5' fill='#1B2A4A'/><text x='154' y='52' font-size='12' fill='#E0A458' font-family='monospace'>+48V</text><path d='M150 48 H60' stroke='#C77E2A' stroke-width='2.4'/><path d='M70 43 l-8 5 l8 5' fill='none' stroke='#C77E2A' stroke-width='2'/>${micBody(30)}<text x='40' y='88' font-size='9' fill='#6B7791' font-family='monospace'>active mic only</text></svg>`,
  preamp:()=>`<svg viewBox='0 0 220 96'>${wpath(60,96,{n:4,A:5,mid:48,st:'#9aa6b8',sw:1.8})}<text x='6' y='80' font-size='9' fill='#6B7791' font-family='monospace'>mic level</text><path d='M70 30 L110 48 L70 66 Z' fill='#1B2A4A'/><text x='118' y='30' font-size='9' fill='#8a521b' font-family='monospace'>gain</text>${wpath(80,96,{n:4,A:22,mid:48,st:'#C77E2A',sw:2.6,sm:140})}<g transform='translate(120,0)'></g><text x='150' y='84' font-size='9' fill='#8a521b' font-family='monospace'>line level</text></svg>`
 };
@@ -214,20 +219,30 @@ const C=[
   comp:'Magnet · Coil · Diaphragm',tag:'passive',
   why:'The workhorse for loud and live sources \u2014 forgiving, durable, and it needs nothing but a cable.'},
  {id:'ribbon',name:'Ribbon mic',group:'input',short:'A ribbon in a magnetic field. Naturally figure-8. Fragile.',
-  defn:'A thin corrugated metal <b>ribbon</b> suspended in a strong magnetic field (a U-magnet). The ribbon <i>is</i> the diaphragm; its motion generates current. Its construction makes it naturally <b>figure-8</b>. <b>Passive</b>, very low output, and delicate \u2014 never phantom-power a vintage/passive ribbon, as a fault or hot-patch can stretch or tear it. (Modern <i>active</i> ribbons are the exception and do use +48V.)',
+  defn:'A thin corrugated metal <b>ribbon</b> suspended in a strong magnetic field (a U-magnet). The ribbon <i>is</i> the diaphragm; its motion through the field generates current \u2014 the same <b>electrodynamic</b> principle as a dynamic mic. Its construction makes it naturally <b>figure-8</b>. <b>Passive</b>, very low output, and delicate \u2014 never phantom-power a vintage/passive ribbon, as a fault or hot-patch can stretch or tear it. (Modern <i>active</i> ribbons are the exception and do use +48V.)',
   comp:'U-magnet · Ribbon diaphragm',tag:'passive',
   why:'Smooth and dark \u2014 a classic on bright or harsh sources \u2014 but it demands careful handling.'},
- {id:'condenser',name:'Condenser mic',group:'input',short:'A capacitor capsule. Active \u2014 needs +48V. Detailed.',
-  defn:'A <b>capacitor</b>: a <b>fixed backplate</b> and a <b>moveable front plate</b> (the diaphragm). Sound changes the gap between them, changing capacitance \u2014 and that change becomes the signal. It is <b>active</b>: the capsule must be charged and its electronics powered, so it requires <b>+48V phantom</b>. Sensitive, detailed, fast transients, and often multi-pattern.',
+ {id:'condenser',name:'Condenser mic',group:'input',short:'A capacitor capsule (electrostatic). Active \u2014 needs power, usually +48V.',
+  defn:'Works on the <b>electrostatic</b> principle. The capsule is a <b>capacitor</b>: a <b>fixed backplate</b> and a <b>moveable front plate</b> (the diaphragm). Sound changes the gap between them, changing capacitance \u2014 and that change becomes the signal. It is <b>active</b>: the capsule must be polarized and its built-in electronics powered. Most studio condensers get that power as <b>+48V phantom</b> from the preamp; <b>tube</b> condensers use their own external power supply, and <b>electrets</b> can run on a battery or low-voltage plug-in power. Sensitive, detailed, fast transients, and often multi-pattern.',
   comp:'Capacitor · Fixed backplate · Moveable diaphragm',tag:'active',
-  why:'The detail and transient champion \u2014 just always remember it can\u2019t make a sound without phantom power.'},
+  why:'The detail and transient champion \u2014 just remember it can\u2019t make a sound without power: usually +48V phantom, sometimes its own supply or a battery.'},
+ {id:'electret',name:'Electret condenser',group:'input',short:'A pre-charged condenser. Tiny, cheap, everywhere.',
+  defn:'A condenser whose capsule uses an <b>electret</b>: a material that holds a <b>permanent electric charge</b>, so the capsule needs no polarizing voltage. It still has a small built-in preamp (an impedance converter) that needs a little power \u2014 from phantom, a battery, or low-voltage plug-in power. Lavaliers, headsets, measurement mics, and phone and laptop mics are almost all electrets.',
+  comp:'Pre-charged electret capsule \u00b7 Built-in FET preamp',tag:'active',
+  why:'It\u2019s the condenser in your lav, your headset, and your phone \u2014 which is why it can run without phantom.'},
  {id:'freq',name:'Frequency response',group:'input',short:'The mic\u2019s tonal fingerprint across the spectrum.',
   defn:'How evenly a mic captures from <b>20 Hz to 20 kHz</b> \u2014 its tonal fingerprint. \u201cFlat\u201d mics aim for neutral; many have intentional shapes, like a <b>presence boost</b> for vocal clarity. It\u2019s usually published right alongside the polar pattern.',
   why:'It\u2019s a big reason two mics on the same source sound different \u2014 you choose a mic partly by its curve.'},
 
+ {id:'splrange',name:'SPL range (max SPL)',group:'input',short:'The loudest sound a mic can take before it distorts.',
+  defn:'<b>Max SPL</b> is the loudest sound a mic can handle before its output distorts past a stated limit (often 0.5% or 1% THD). Together with its <b>self-noise</b> \u2014 the quietest sound it can usefully capture \u2014 it defines the mic\u2019s usable dynamic range. Dynamics shrug off very high SPL; condensers vary widely, which is what their <b>pad</b> switch is for.',
+  why:'Check it before you close-mic a kick drum, a guitar cab, or a brass section \u2014 the loudest sources can top 140 dB SPL right at the mic.'},
  {id:'polar',name:'Polar patterns',group:'proc',short:'How sensitive a mic is to each direction.',
   defn:'The map of how sensitive a mic is to sound from each direction. <b>Omni</b> hears everything equally; <b>cardioid</b> favors the front and rejects the rear; <b>figure-8</b> takes front and back while rejecting the sides. The pattern <i>emerges</i> from the capsule\u2019s construction (pressure vs. pressure-gradient operation).',
   why:'Your main tool for control \u2014 you aim a mic\u2019s rejection at the bleed, room, or monitor you don\u2019t want.'},
+ {id:'shotgun',name:'Shotgun mic',group:'proc',short:'An interference tube narrows the pickup to a tight lobe.',
+  defn:'A long, narrow mic (usually a condenser) with an <b>interference tube</b> \u2014 a slotted tube in front of the capsule. Sound arriving from the sides enters the slots at different points and partially cancels, so the pickup narrows to a tight <b>lobar</b> pattern with a small rear lobe. The narrowing works best at high frequencies; down low it behaves more like the supercardioid capsule behind it.',
+  why:'Reaches a distant source while rejecting the sides \u2014 the film/TV boom mic. It doesn\u2019t \u201czoom\u201d or make the source louder; it rejects more of everything off-axis, and indoors its off-axis coloration and rear lobe can bite.'},
  {id:'inverse',name:'Inverse square law',group:'proc',short:'Double the distance, drop about 6 dB.',
   defn:'Sound level falls with the <b>square of the distance</b>: double the distance and you get a quarter of the power \u2014 about <b>\u22126 dB</b>. It\u2019s the basic propagation rule underneath all distance behavior.',formula:'level \u2193 \u2248 \u22126 dB per doubling of distance',
   why:'It\u2019s why a small move on a close source swings the level, and why distance itself is a level and room-vs-source control.'},
@@ -245,8 +260,11 @@ const C=[
   why:'The trade is width against mono-compatibility, and phase is the hidden variable running underneath both.'},
 
  {id:'phantom',name:'Phantom power (+48V)',group:'bridge',short:'Power sent up the cable to run active mics.',
-  defn:'A <b>+48V DC</b> voltage sent up the same XLR cable to power <b>active</b> mics (condensers). Passive mics (dynamic, ribbon) simply don\u2019t use it. It isn\u2019t a separate topic \u2014 it falls straight out of the transducer principle: an active capsule must be powered. Don\u2019t hot-patch a passive ribbon with it live.',
+  defn:'A <b>+48V DC</b> voltage sent up the same XLR cable to power <b>active</b> mics (condensers). Phantom is the most common way an active mic is powered <b>externally</b>; a tube condenser uses its own dedicated external supply instead, and some active mics (many electrets) are <b>self-powered</b> by an internal battery. Passive mics (dynamic, ribbon) simply don\u2019t use it. It isn\u2019t a separate topic \u2014 it falls straight out of the transducer principle: an active capsule must be powered. Don\u2019t hot-patch a passive ribbon with it live.',
   why:'Forget it and a condenser stays silent; misuse it and you can damage a vintage ribbon.'},
+ {id:'impedance',name:'Electrical impedance',group:'bridge',short:'Low-Z mics, high-Z instruments \u2014 and why a guitar needs a DI.',
+  defn:'<b>Impedance (Z)</b> is a circuit\u2019s opposition to an AC signal, in ohms (\u03a9). Professional mics are <b>low impedance (low-Z)</b>, roughly 150\u2013600 \u03a9, so they can drive long balanced cables without losing highs. Guitar pickups and some old mics are <b>high impedance (high-Z)</b> \u2014 thousands of ohms or more \u2014 and lose high frequencies over long cables, so they need a high-Z (instrument or DI) input. Rule of thumb: feed a low source impedance into an input several times higher (a mic preamp\u2019s input is typically 1.5\u20133 k\u03a9).',formula:'connect low-Z source \u2192 higher-Z input (about 5\u201310\u00d7)',
+  why:'It\u2019s why mic inputs are low-Z XLR, why a passive guitar into a mic input sounds thin and dull, and what a DI box actually fixes.'},
  {id:'preamp',name:'Microphone preamp',group:'bridge',short:'Raises every mic\u2019s weak signal to line level.',
   defn:'Every mic, of every type, puts out a signal far too weak to use (<b>mic level</b>). The <b>preamp</b> raises it to <b>line level</b> before anything else in the chain can happen. It is <b>universal</b> \u2014 it can\u2019t tell the three mic types apart \u2014 and <b>electrical, not acoustic</b>, which is why it sits in the bridge.',
   why:'It\u2019s the first gain stage; nothing downstream works until you set it, so gain staging starts here.'}
@@ -315,10 +333,10 @@ function openDetail(c){
   head.querySelector('.x').onclick=closeDetail;
   const body=el('div',{class:'body'});
   body.append(el('p',{html:c.defn}));
-  if(c.comp)body.append(el('div',{class:'note comp',html:'<b>Components \u2014 </b>'+c.comp+(c.tag?'  \u00b7  '+(c.tag==='active'?'Active (needs +48V)':'Passive (no power)'):'')}));
+  if(c.comp)body.append(el('div',{class:'note comp',html:'<b>Components \u2014 </b>'+c.comp+(c.tag?'  \u00b7  '+(c.tag==='active'?'Active (needs power \u2014 usually +48V)':'Passive (no power)'):'')}));
   if(c.formula)body.append(el('div',{class:'formula',html:c.formula}));
   body.append(el('div',{class:'note why',html:'<b>Why it matters \u2014 </b>'+c.why}));
-  if(c.id==='polar'||c.id==='inverse'||c.id==='proximity'){const map={polar:'polar',inverse:'inverse',proximity:'proximity'};const b=el('button',{class:'btn gold sm',style:'margin-top:14px'},'\u25b6 Hear it in the Lab');b.onclick=()=>{closeDetail();setTab('lab');setTimeout(()=>{const t=document.getElementById('st-'+map[c.id]);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});},120);};body.append(b);}
+  if(c.id==='polar'||c.id==='shotgun'||c.id==='inverse'||c.id==='proximity'){const map={polar:'polar',shotgun:'polar',inverse:'inverse',proximity:'proximity'};const b=el('button',{class:'btn gold sm',style:'margin-top:14px'},'\u25b6 Hear it in the Lab');b.onclick=()=>{closeDetail();setTab('lab');setTimeout(()=>{const t=document.getElementById('st-'+map[c.id]);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});},120);};body.append(b);}
   p.append(head,body);document.getElementById('overlay').classList.add('on');
 }
 function closeDetail(){document.getElementById('overlay').classList.remove('on');}
@@ -327,14 +345,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
 
 function renderLearn(){
   clearAnims();stopAudio();view.innerHTML='';
-  view.append(el('div',{class:'eyebrow'},'15 concepts \u00b7 along the spine'),el('h1',{class:'page'},'Learn'));
+  view.append(el('div',{class:'eyebrow'},'19 concepts \u00b7 along the spine'),el('h1',{class:'page'},'Learn'));
   ['input','proc','bridge'].forEach(g=>{
     const gh=el('div',{class:'grouphead'},el('div',{class:'k'},G[g].k),el('div',{class:'t'},G[g].t),el('div',{class:'d'},G[g].d));
     view.append(gh);
     const grid=el('div',{class:'grid'});
     C.filter(c=>c.group===g).forEach(c=>{
       const card=el('div',{class:'ccard',tabindex:'0',role:'button'},el('div',{class:'art',html:VIZ[c.id]()}),el('h3',{},c.name),el('p',{},c.short));
-      if(c.tag)card.append(el('div',{class:'tagrow'},el('span',{class:'tag '+c.tag},c.tag==='active'?'ACTIVE · +48V':'PASSIVE · NO POWER')));
+      if(c.tag)card.append(el('div',{class:'tagrow'},el('span',{class:'tag '+c.tag},c.tag==='active'?'ACTIVE · NEEDS POWER':'PASSIVE · NO POWER')));
       card.onclick=()=>openDetail(c);
       card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openDetail(c);}};
       grid.append(card);
@@ -357,14 +375,14 @@ function renderLab(){
   const pcv=el('canvas');const psc=el('div',{class:'scope polar'},pcv);
   let pattern='cardioid',angle=35,pPlaying=false;
   const patbar=el('div',{class:'patbtns'});
-  const PATS=[['omni','Omni'],['cardioid','Cardioid'],['super','Supercardioid'],['hyper','Hypercardioid'],['fig8','Figure-8']];
+  const PATS=[['omni','Omni'],['cardioid','Cardioid'],['super','Supercardioid'],['hyper','Hypercardioid'],['fig8','Figure-8'],['shotgun','Shotgun']];
   PATS.forEach(([k,lbl])=>{const b=el('button',{class:'btn tog sm','aria-pressed':String(k===pattern)},lbl);b.onclick=()=>{pattern=k;patbar.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');updatePolarAudio();updateReadout();};patbar.append(b);});
   const aIn=el('input',{type:'range',min:'0',max:'360',value:String(angle)});
   const aVal=el('div',{class:'val'},angle+'\u00b0');
   const pBtn=el('button',{class:'btn gold'},'\u25b6 Play');
   const pRead=el('div',{class:'readout',html:'Pickup: <b>\u22121.7 dB</b>'});
   pol.append(el('div',{style:'margin-bottom:8px'},patbar),psc,ctlRow('Source angle',aIn,aVal),el('div',{class:'lab-actions'},pBtn,pRead),
-    el('div',{class:'tip',html:'<b>Notice:</b> on a <b>cardioid</b> the rear (180\u00b0) drops out; on a <b>figure-8</b> the sides (90\u00b0/270\u00b0) null to silence; <b>omni</b> barely changes. Roughly: omni\u2248condenser-set-omni, cardioid\u2248dynamic, figure-8\u2248ribbon. The tone also dulls off-axis \u2014 that\u2019s off-axis coloration.'}));
+    el('div',{class:'tip',html:'<b>Notice:</b> on a <b>cardioid</b> the rear (180\u00b0) drops out; on a <b>figure-8</b> the sides (90\u00b0/270\u00b0) null to silence; <b>omni</b> barely changes. Roughly: omni\u2248condenser-set-omni, cardioid\u2248dynamic, figure-8\u2248ribbon. The tone also dulls off-axis \u2014 that\u2019s off-axis coloration. <b>Shotgun</b> is the tightest: the sides drop well down, with a small lobe out the back.'}));
   view.append(pol);
   function offaxisHz(){const m=Math.abs(angle>180?360-angle:angle);return 17000-Math.min(m,150)/180*13500;}
   function updatePolarAudio(){if(!pPlaying)return;const mag=Math.abs(polarR(pattern,angle));setVol(0.16*mag);if(chain&&chain.extra.lp)chain.extra.lp.frequency.setTargetAtTime(offaxisHz(),actx.currentTime,0.02);}
@@ -488,7 +506,14 @@ function showBack(c){
 
 /* ============ quiz ============ */
 const QPOOL=[
- {q:'Which microphone type is active and requires phantom power?',opts:['Condenser','Dynamic','Ribbon','None of them'],a:'Condenser',ex:'<b>Condenser.</b> Its capacitor capsule must be charged and its electronics powered \u2014 hence +48V.'},
+ {q:'Dynamic and ribbon microphones both work on the ______ principle.',opts:['Electrodynamic','Electrostatic','Piezoelectric','Optical'],a:'Electrodynamic',ex:'<b>Electrodynamic.</b> A conductor (coil or ribbon) moving in a magnetic field generates the signal.'},
+ {q:'A condenser microphone works on the ______ principle.',opts:['Electrostatic','Electrodynamic','Magnetic','Inverse square'],a:'Electrostatic',ex:'<b>Electrostatic.</b> The diaphragm and fixed backplate form a capacitor.'},
+ {q:'A tube condenser mic is usually powered by:',opts:['Its own external power supply','Phantom power only','Nothing — it is passive','The ribbon element'],a:'Its own external power supply',ex:'Tube condensers need more power than phantom provides, so they come with a <b>dedicated supply</b>.'},
+ {q:'An electret condenser differs from a standard condenser because its capsule:',opts:['Holds a permanent charge, so it needs only a little power for its preamp','Needs no power at all','Uses a magnet and coil','Requires a tube supply'],a:'Holds a permanent charge, so it needs only a little power for its preamp',ex:'The capsule is pre-charged; its built-in FET still needs phantom, a battery, or plug-in power.'},
+ {q:'A shotgun mic narrows its pickup by using:',opts:['An interference tube','A larger diaphragm','More phantom power','A figure-8 capsule'],a:'An interference tube',ex:'Side-arriving sound enters the slotted <b>tube</b> at different points and partially cancels.'},
+ {q:'Professional microphones are:',opts:['Low impedance (low-Z)','High impedance (high-Z)','Zero impedance','Speaker-level'],a:'Low impedance (low-Z)',ex:'Low-Z (≈150–600 Ω) drives long balanced cables without losing highs. Guitars are high-Z, which is why a DI helps.'},
+ {q:'A microphone’s max SPL rating tells you:',opts:['The loudest sound it can handle before distorting','Its lowest audible frequency','How much phantom it needs','Its polar pattern'],a:'The loudest sound it can handle before distorting',ex:'Pair it with self-noise for the mic’s usable dynamic range; check it before close-miking loud sources.'},
+ {q:'Which microphone type is active and needs power, usually +48V phantom?',opts:['Condenser','Dynamic','Ribbon','None of them'],a:'Condenser',ex:'<b>Condenser.</b> Its capacitor capsule must be charged and its electronics powered \u2014 hence +48V.'},
  {q:'A coil moving through a magnet\u2019s field, generating its own signal, describes a:',opts:['Dynamic mic','Condenser mic','Ribbon mic','Preamp'],a:'Dynamic mic',ex:'<b>Dynamic (moving-coil).</b> It\u2019s passive \u2014 it generates the signal itself and needs no power.'},
  {q:'The figure-8 pattern is the natural result of which mic\u2019s construction?',opts:['Ribbon','Dynamic','Condenser (omni)','USB mic'],a:'Ribbon',ex:'<b>Ribbon.</b> Its open front-and-back element yields figure-8 directly.'},
  {q:'Phantom power is:',opts:['+48V DC sent up the mic cable','A type of preamp','An acoustic effect','+12V for dynamics'],a:'+48V DC sent up the mic cable',ex:'<b>+48V.</b> It powers active (condenser) mics; passive mics ignore it.'},

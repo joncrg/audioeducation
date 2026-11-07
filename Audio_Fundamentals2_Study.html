@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audio Fundamentals II — Active Study</title>
+<style>
+  :root{
+    --navy:#14203A; --ink:#1B2A4A; --gold:#C77E2A; --gold2:#E0A458; --teal:#3E9C92;
+    --paper:#EEF2F8; --card:#FFFFFF; --line:#DCE4EF; --muted:#6B7791; --body:#33405A;
+    --scope:#0E1730; --red:#C7553E;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5}
+  .topbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:12px 22px;gap:16px;box-shadow:0 2px 10px rgba(10,18,35,.25)}
+  a.mark{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.16em;font-size:14px;text-transform:uppercase;text-decoration:none;color:inherit;cursor:pointer;transition:opacity .12s}
+  a.mark:hover{opacity:.82}
+  .mark svg{width:34px;height:22px}
+  .mark small{display:block;letter-spacing:.16em;color:#9fb0cc;font-size:10px;font-weight:600;margin-top:1px;text-transform:none}
+  .prog{font-family:var(--mono);font-size:12px;color:#cfdaec;text-align:right;white-space:nowrap}
+  .prog b{color:var(--gold2)} .prog .bar{margin-top:5px;width:130px;height:5px;border-radius:3px;background:#2c3d5c;overflow:hidden}
+  .prog .bar i{display:block;height:100%;width:0;background:var(--gold2);transition:width .4s}
+  .tabs{position:sticky;top:50px;z-index:19;background:var(--card);border-bottom:1px solid var(--line);display:flex;gap:2px;padding:0 14px;overflow-x:auto}
+  .tabs button{appearance:none;border:0;background:none;font-family:var(--sans);font-size:14px;font-weight:600;color:var(--muted);padding:14px 14px 11px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tabs button:hover{color:var(--ink)} .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 20px 70px}
+  h1.page{font-size:25px;margin:.1em 0 .15em;letter-spacing:-.01em}
+  .lead{color:var(--body);max-width:64ch;margin:.2em 0 1.4em}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+  .grouphead{margin:28px 0 12px}
+  .grouphead .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .grouphead .t{font-size:18px;font-weight:700;color:var(--ink);margin-top:2px}
+  .grouphead .d{font-size:13px;color:var(--muted)}
+  .art{background:linear-gradient(160deg,#fafbfe,#eef3fa);border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .art svg{width:100%;height:auto;display:block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
+  .ccard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;text-align:left}
+  .ccard:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(20,32,58,.10);border-color:#c6d4e6}
+  .ccard .art{height:96px;margin-bottom:10px;padding:6px} .ccard h3{margin:0;font-size:15px} .ccard p{margin:4px 0 0;color:var(--muted);font-size:12.5px}
+  .overlay{position:fixed;inset:0;background:rgba(15,23,40,.55);display:none;z-index:40;padding:24px;overflow:auto}
+  .overlay.on{display:flex;align-items:flex-start;justify-content:center}
+  .panel{background:var(--card);border-radius:16px;max-width:680px;width:100%;margin:auto;overflow:hidden;box-shadow:0 24px 60px rgba(10,18,35,.4)}
+  .panel .head{display:flex;gap:18px;padding:18px 22px;background:linear-gradient(150deg,#fafbfe,#eaf0f9);border-bottom:1px solid var(--line);align-items:center}
+  .panel .head .art{width:190px;min-width:190px;height:104px;padding:6px}
+  .panel .head h2{margin:0 0 2px;font-size:21px} .panel .head .sub{color:var(--muted);font-size:12.5px;font-family:var(--mono)}
+  .panel .body{padding:18px 22px} .panel .body p{margin:0 0 12px;color:var(--body);font-size:14px}
+  .formula{font-family:var(--mono);background:#11203f;color:#dbe7ff;border-radius:8px;padding:9px 13px;display:inline-block;font-size:13.5px;margin:0 0 12px}
+  .formula b{color:var(--gold2)}
+  .note{border-radius:10px;padding:12px 14px;font-size:13.5px}
+  .note.why{background:#eef4f3;border:1px solid #d6e8e4} .note.why b{color:#22685f}
+  .note.param{background:#f3f6fb;border:1px solid var(--line);margin-bottom:12px} .note.param b{color:var(--ink)}
+  .x{margin-left:auto;appearance:none;border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;color:var(--muted)}
+  .x:hover{color:var(--ink);border-color:#c6d4e6}
+  .btn{appearance:none;border:0;border-radius:10px;font-family:var(--sans);font-weight:650;font-size:14px;padding:11px 18px;cursor:pointer}
+  .btn.primary{background:var(--navy);color:#fff}.btn.primary:hover{background:#1d2c4a}
+  .btn.gold{background:var(--gold);color:#fff}.btn.gold:hover{background:#b06f22}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}.btn.ghost:hover{border-color:#c6d4e6}
+  .btn.ok{background:#e4f3f0;color:#1f6b62;border:1px solid #c9e7e1} .btn.again{background:#fbeede;color:#9a5a16;border:1px solid #f3dcc0}
+  .btn.sm{padding:8px 13px;font-size:13px}
+  .btn.tog{background:#fff;border:1px solid var(--line);color:var(--ink)} .btn.tog[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .btn.hold{user-select:none;-webkit-user-select:none;touch-action:none}
+  .station{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 8px 24px rgba(20,32,58,.05)}
+  .station h3{margin:0 0 2px;font-size:18px} .station .ssub{color:var(--muted);font-size:13px;margin-bottom:13px}
+  .scope{background:var(--scope);border-radius:12px;padding:6px;position:relative} .scope canvas{display:block;width:100%;height:220px}
+  .scope.tall canvas{height:280px}
+  .scope.drag canvas{touch-action:none;cursor:ns-resize}
+  .ctl{display:grid;grid-template-columns:118px 1fr 116px;align-items:center;gap:12px;margin-top:12px}
+  .ctl label{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .ctl .val{font-family:var(--mono);font-size:13px;color:var(--ink);text-align:right}
+  input[type=range]{width:100%;accent-color:var(--gold);height:26px;cursor:pointer}
+  .lab-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .segs{display:flex;gap:6px;flex-wrap:wrap}
+  .readout{font-family:var(--mono);font-size:13px;color:var(--ink);background:#f3f6fb;border:1px solid var(--line);border-radius:8px;padding:7px 11px} .readout b{color:var(--gold)}
+  .notice{font-size:12.5px;color:var(--muted);background:#fbf6ee;border:1px solid #efe1cb;border-radius:8px;padding:9px 12px;margin-top:13px}
+  .tip{font-size:13.5px;color:var(--body);margin-top:12px}.tip b{color:var(--ink)}
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:600px;margin:0 auto;text-align:center;box-shadow:0 8px 24px rgba(20,32,58,.06)}
+  .stage .art{height:150px;padding:10px;margin:0 auto 12px;max-width:340px}
+  .counter{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.05em}
+  .prompt{font-size:15px;color:var(--body);margin:10px auto 16px;max-width:48ch}
+  .reveal{border-top:1px dashed var(--line);margin-top:16px;padding-top:16px;text-align:left} .reveal p{margin:0 0 10px;font-size:14px;color:var(--body)}
+  .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+  .opts{display:grid;gap:9px;margin:6px auto 0;max-width:520px;text-align:left}
+  .opt{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:13px 15px;font-size:14.5px;font-family:var(--sans);cursor:pointer;color:var(--ink);transition:.1s}
+  .opt:hover:not(:disabled){border-color:#9fb6d6;background:#f7faff} .opt:disabled{cursor:default}
+  .opt.correct{background:#e4f3f0;border-color:#7cc6bb;color:#1c5f57;font-weight:600} .opt.wrong{background:#fbe9e9;border-color:#e3a3a3;color:#9a3a3a}
+  .explain{margin:14px auto 0;max-width:520px;background:#f3f6fb;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13.5px;color:var(--body);text-align:left;display:none} .explain.on{display:block}.explain b{color:var(--ink)}
+  .scorebar{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px}
+  .bigscore{font-size:46px;font-weight:800;color:var(--navy);text-align:center;line-height:1} .bigscore span{color:var(--gold)}
+  .steps{counter-reset:s;display:grid;gap:14px;margin:18px 0}
+  .step{display:grid;grid-template-columns:42px 1fr;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .step .n{counter-increment:s;font-family:var(--mono);font-weight:700;color:#fff;background:var(--navy);width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .step .n::before{content:counter(s)} .step h3{margin:0 0 3px;font-size:16px}.step p{margin:0;color:var(--body);font-size:13.5px}
+  .callout{background:linear-gradient(150deg,#1a2742,#22324f);color:#dbe4f2;border-radius:12px;padding:16px 18px;margin:18px 0;font-size:14px}
+  .callout b{color:var(--gold2)}
+  footer{border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;padding:22px;font-family:var(--mono);letter-spacing:.04em}
+  @media (max-width:560px){.panel .head{flex-direction:column;align-items:flex-start}.ctl{grid-template-columns:84px 1fr 78px}}
+  @media (prefers-reduced-motion:reduce){.ccard{transition:none}}
+  :focus-visible{outline:3px solid var(--gold2);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="mark" href="index.html" title="Back to all study guides">
+    <svg viewBox="0 0 40 22" aria-hidden="true"><path d="M2 19 L8 3 L14 10 H26 L34 19" fill="none" stroke="#E0A458" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div>Audio Fundamentals II<small>Active study · University of Evansville &nbsp;•&nbsp; Creative Technologies &nbsp;•&nbsp; Prof. Jon Robertson</small></div>
+  </a>
+  <div class="prog" id="prog">Mastered <b><span id="pm">0</span>/8</b><div class="bar"><i id="pbar"></i></div></div>
+</div>
+<nav class="tabs" id="tabs" role="tablist">
+  <button role="tab" data-tab="howto" aria-selected="true">How to use this</button>
+  <button role="tab" data-tab="learn" aria-selected="false">Learn</button>
+  <button role="tab" data-tab="lab" aria-selected="false">Lab · hear it</button>
+  <button role="tab" data-tab="cards" aria-selected="false">Flashcards</button>
+  <button role="tab" data-tab="quiz" aria-selected="false">Quiz</button>
+</nav>
+<main class="wrap" id="view"></main>
+<div class="overlay" id="overlay"><div class="panel" id="panel"></div></div>
+<footer>University of Evansville · Creative Technologies &nbsp;•&nbsp; Audio Engineering &nbsp;•&nbsp; Audio Fundamentals Part 2 &nbsp;•&nbsp; Jon Robertson</footer>
+
+<script>
+/* ============ small shared math ============ */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dbLin=v=>Math.pow(10,v/20), linDb=v=>20*Math.log10(Math.max(v,1e-9));
+const fmtHz=f=>f>=1000?(f/1000).toFixed(f<10000?2:1)+' kHz':Math.round(f)+' Hz';
+const fmtM=m=>m<1?Math.round(m*100)+' cm':m.toFixed(m<10?2:1)+' m';
+// harmonic recipes (amplitude of harmonic n at index n-1; sign = phase)
+const NH=16;
+function recipe(name){const a=new Array(NH).fill(0);
+  if(name==='sine'){a[0]=1;}
+  else if(name==='square'){for(let n=1;n<=NH;n+=2)a[n-1]=1/n;}
+  else if(name==='saw'){for(let n=1;n<=NH;n++)a[n-1]=(n%2?1:-1)/n;}
+  else if(name==='triangle'){for(let n=1,k=0;n<=NH;n+=2,k++)a[n-1]=(k%2?-1:1)/(n*n);}
+  else if(name==='flute'){[1,0.35,0.12,0.05,0.02].forEach((v,i)=>a[i]=v);}
+  else if(name==='clarinet'){[1,0.04,0.65,0.03,0.42,0.03,0.26,0.02,0.15,0.02,0.08,0.01,0.04].forEach((v,i)=>a[i]=v);}
+  else if(name==='brass'){[0.65,0.9,1,0.85,0.7,0.56,0.45,0.36,0.28,0.21,0.16,0.12,0.09,0.07,0.05,0.04].forEach((v,i)=>a[i]=v);}
+  return a;}
+function waveVal(a,ph){let s=0;for(let n=1;n<=a.length;n++)s+=a[n-1]*Math.sin(n*ph);return s;}
+
+/* ============ concept diagrams ============ */
+const GOLD='#C77E2A',TEAL='#3E9C92';
+const T=(x,y,s,col,sz)=>`<text x='${x}' y='${y}' font-size='${sz||9}' fill='${col||'#6B7791'}' font-family='monospace'>${s}</text>`;
+function wavePath(a,x0,w,mid,A,cyc){let pk=0;for(let i=0;i<=200;i++)pk=Math.max(pk,Math.abs(waveVal(a,2*Math.PI*i/200)));let d='';for(let i=0;i<=160;i++){const ph=2*Math.PI*cyc*i/160;const y=mid-A*waveVal(a,ph)/pk;d+=(i?'L':'M')+(x0+w*i/160).toFixed(1)+' '+y.toFixed(1);}return d;}
+const VIZ={
+ waveform:()=>`<svg viewBox='0 0 220 96'><line x1='6' y1='48' x2='214' y2='48' stroke='#D7DEEA'/>${['sine','triangle','square','saw'].map((r,i)=>`<path d='${wavePath(recipe(r),6+i*52,46,48,20,1)}' fill='none' stroke='${i%2?TEAL:GOLD}' stroke-width='2'/>`).join('')}${T(8,90,'sine · triangle · square · saw')}</svg>`,
+ timbre:()=>`<svg viewBox='0 0 220 96'>${[1,0.35,0.12,0.05].map((v,i)=>`<rect x='${14+i*12}' y='${70-v*50}' width='8' height='${v*50}' fill='${GOLD}'/>`).join('')}${[0.65,0.9,1,0.85,0.7,0.56,0.45,0.36].map((v,i)=>`<rect x='${118+i*11}' y='${70-v*50}' width='7' height='${v*50}' fill='${TEAL}'/>`).join('')}<line x1='8' y1='70' x2='212' y2='70' stroke='#D7DEEA'/>${T(14,84,'flute-like')}${T(126,84,'brass-like')}${T(56,94,'same pitch, different harmonics')}</svg>`,
+ envelope:()=>`<svg viewBox='0 0 220 96'><line x1='10' y1='78' x2='212' y2='78' stroke='#D7DEEA'/><path d='M10 78 L36 14 L70 38 L150 38 L196 78' fill='none' stroke='${GOLD}' stroke-width='2.6' stroke-linejoin='round'/>${T(18,92,'A')}${T(50,92,'D')}${T(106,92,'S')}${T(170,92,'R')}<line x1='150' y1='14' x2='150' y2='78' stroke='#9aa6b8' stroke-dasharray='3 3'/>${T(118,30,'sustain = a level','#8a521b')}</svg>`,
+ decibel:()=>`<svg viewBox='0 0 220 96'><line x1='20' y1='78' x2='20' y2='10' stroke='#1B2A4A'/>${[0,6,12,18,24].map((d,i)=>`<line x1='16' y1='${78-i*16}' x2='24' y2='${78-i*16}' stroke='#1B2A4A'/>${T(28,81-i*16,'+'+d+' dB')}`).join('')}${[0,1,2,3,4].map(i=>`<rect x='${92+i*22}' y='${78-Math.min(64,4*Math.pow(2,i))}' width='14' height='${Math.min(64,4*Math.pow(2,i))}' fill='${i===4?TEAL:GOLD}'/>`).join('')}${T(92,92,'×2 pressure per +6 dB')}</svg>`,
+ spl:()=>`<svg viewBox='0 0 220 96'><rect x='16' y='8' width='10' height='80' rx='3' fill='#eef2f8' stroke='#9aa6b8'/><rect x='16' y='8' width='10' height='18' rx='3' fill='#C7553E'/><rect x='16' y='26' width='10' height='22' fill='${GOLD}'/>${[[0,'0 · threshold of hearing'],[60,'60 · conversation'],[85,'85 · long-exposure risk'],[130,'130 · threshold of pain']].map(([d,s])=>`<line x1='28' y1='${88-d*0.6}' x2='36' y2='${88-d*0.6}' stroke='#1B2A4A'/>${T(40,91-d*0.6,s)}`).join('')}</svg>`,
+ vu:()=>`<svg viewBox='0 0 220 96'><path d='M30 70 A80 80 0 0 1 190 70' fill='none' stroke='#1B2A4A' stroke-width='2'/><path d='M150 30 A80 80 0 0 1 190 70' fill='none' stroke='#C7553E' stroke-width='4'/>${T(98,24,'0 VU','#1B2A4A',10)}${T(30,86,'−20')}${T(178,86,'+3')}<line x1='110' y1='84' x2='86' y2='22' stroke='${GOLD}' stroke-width='2.4'/><circle cx='110' cy='84' r='4' fill='#1B2A4A'/></svg>`,
+ isl:()=>`<svg viewBox='0 0 220 96'><circle cx='16' cy='48' r='6' fill='${TEAL}'/>${[1,2,4,8].map((r,i)=>`<path d='M${16+r*22} ${48-r*5} Q${22+r*24} 48 ${16+r*22} ${48+r*5}' fill='none' stroke='${GOLD}' stroke-width='1.6' opacity='${1-i*0.18}'/>${T(10+r*22,28-i*2,['0','−6','−12','−18'][i]+' dB')}`).join('')}${T(30,90,'each doubling of distance = −6 dB')}</svg>`,
+ cd:()=>`<svg viewBox='0 0 220 96'><line x1='14' y1='80' x2='210' y2='80' stroke='#D7DEEA'/><path d='M14 16 L200 76' stroke='${GOLD}' stroke-width='2.4'/><path d='M14 46 H210' stroke='${TEAL}' stroke-width='2.4'/><circle cx='107' cy='46' r='4' fill='#1B2A4A'/><line x1='107' y1='46' x2='107' y2='80' stroke='#1B2A4A' stroke-dasharray='3 3'/>${T(80,92,'critical distance','#1B2A4A')}${T(130,40,'reverberant (room)','#22685f')}${T(18,12,'direct','#8a521b')}</svg>`
+};
+
+/* ============ data ============ */
+const G={
+ shape:{k:'The shape of a sound',t:'Waveform · Timbre · Envelope',d:'What makes one sound different from another at the same pitch and loudness.'},
+ level:{k:'Measuring level',t:'Decibel · SPL · VU meter',d:'How we put a number on “how loud”, and what our meters actually show.'},
+ space:{k:'Sound in a space',t:'Inverse square law · Critical distance',d:'What happens to level, and to the balance of source and room, as you move away.'}
+};
+const C=[
+ {id:'waveform',name:'Waveform',group:'shape',short:'A picture of amplitude over time. Its shape is its harmonics.',
+  defn:`A <b>waveform</b> is a graph of a sound’s <b>amplitude over time</b>: air pressure in the room, or voltage in a cable. One repeating cycle is the shape of the sound. The classic shapes are <b>sine</b> (a single frequency, no harmonics), <b>triangle</b> (odd harmonics, falling off fast), <b>square</b> (odd harmonics, falling off more slowly), and <b>sawtooth</b> (every harmonic).`,
+  param:'A waveform’s <b>shape</b> is determined by its <b>harmonic content</b>: which harmonics are present and how strong each one is.',
+  why:`It’s the picture on every DAW track and oscilloscope. Reading a waveform tells you level, transients, clipping, and, roughly, how bright or pure a sound is.`,lab:'timbre'},
+ {id:'timbre',name:'Timbre',group:'shape',short:'Tone color: why a flute and a trumpet on the same note sound different.',
+  defn:`<b>Timbre</b> (pronounced “TAM-ber”) is a sound’s <b>tone color</b>, the quality that lets you tell two sounds apart even at the <b>same pitch and the same loudness</b>. It comes mostly from the <b>harmonic content</b> (the fundamental plus its overtones, and their relative levels) and from the <b>envelope</b>, especially the attack. <b>Example:</b> a flute and a trumpet both playing A440 share the same fundamental, but the flute has few, weak harmonics (pure, soft) while the trumpet has many strong ones (bright, brassy).`,
+  why:`Timbre is what EQ shapes, what mic choice and placement shape, and what you are listening for when you say a sound is “dark”, “bright”, “nasal”, or “thin”.`,lab:'timbre'},
+ {id:'envelope',name:'Envelope (ADSR)',group:'shape',short:'The shape of a sound’s level over time: attack, decay, sustain, release.',
+  defn:`The <b>envelope</b> is the shape of a sound’s <b>level over time</b>, usually described as <b>ADSR</b>. <b>Attack</b>: how long it takes to rise from silence to its peak. <b>Decay</b>: how long it takes to fall from the peak to the sustain level. <b>Sustain</b>: the <i>level</i> it holds while the note continues (a level, not a time). <b>Release</b>: how long it takes to fade to silence after the note ends.`,
+  param:'Piano: instant attack, decays away with no true sustain. Organ: instant attack, full sustain, quick release. Bowed violin: slow attack, strong sustain. Plucked guitar: instant attack, decays.',
+  why:`The attack is a huge part of how we recognize an instrument, and it’s what compressors, gates, and transient shapers act on. Envelopes are also the core of every synthesizer.`,lab:'env'},
+ {id:'decibel',name:'Decibel (dB)',group:'level',short:'A logarithmic ratio between two levels. Always relative to something.',
+  defn:`A <b>decibel</b> is a <b>logarithmic ratio</b> between two quantities. It always compares a level to a <b>reference</b>: dB on its own means “this much louder or quieter than something.” The suffix names the reference: <b>dB SPL</b> (sound pressure, 20 µPa), <b>dBFS</b> (digital full scale), <b>dBu</b> (0.775 V), <b>dBV</b> (1 V). We use a log scale because hearing is roughly logarithmic and our range of hearing spans about a million-to-one in pressure.`,
+  formula:'level difference (dB) = <b>20</b> × log₁₀(p₂ ÷ p₁)   ·   for power: <b>10</b> × log₁₀(P₂ ÷ P₁)',
+  param:'<b>+6 dB</b> = double the pressure (or voltage). <b>+3 dB</b> = double the power. <b>+10 dB</b> ≈ sounds about twice as loud. <b>~1 dB</b> ≈ the smallest change most people notice.',
+  why:`Every fader, meter, plug-in, and spec sheet speaks in dB. Knowing the rules of thumb lets you predict what a move will do before you make it.`,lab:'db'},
+ {id:'spl',name:'Sound Pressure Level (SPL)',group:'level',short:'Loudness in the air, in dB relative to the threshold of hearing.',
+  defn:`<b>SPL</b> is the strength of the pressure swings in the air, expressed in decibels relative to a fixed reference of <b>20 micropascals</b>, roughly the quietest sound a healthy ear can hear at 1 kHz. So <b>0 dB SPL</b> is the threshold of hearing (not silence), conversation is about <b>60 dB SPL</b>, long exposure above about <b>85 dB SPL</b> risks hearing damage, and about <b>130 dB SPL</b> is the threshold of pain.`,
+  formula:'dB SPL = 20 × log₁₀(p ÷ <b>20 µPa</b>)',
+  why:`SPL is how we talk about loudness in a room: mic max-SPL ratings, monitor levels, concert limits, and hearing safety. It is a decibel scale with a fixed reference, which is why it can be an absolute number.`,lab:'db'},
+ {id:'vu',name:'VU meter',group:'level',short:'A slow, averaging meter that reads closer to perceived loudness than peaks.',
+  defn:`A <b>VU (volume unit) meter</b> is a standardized <b>averaging</b> meter with deliberately slow ballistics: it takes about <b>300 ms</b> to rise to a steady tone’s level. It reads roughly the <b>average</b> level, closer to how loud something sounds, and <b>under-reads short transients</b>: a snare hit can peak 10–20 dB above what the needle shows. In analog gear, <b>0 VU</b> is aligned to the nominal operating level (typically <b>+4 dBu</b>); in a DAW it’s commonly aligned to −18 or −20 dBFS.`,
+  param:'A <b>peak meter</b> is the opposite: it responds instantly to the highest sample, which is what you need to avoid clipping. Use the VU to judge loudness and balance, and the peak meter to protect headroom.',
+  why:`The gap between the VU reading and the peak reading is the signal’s <b>crest factor</b>. Drums have a big gap; a sustained organ has a small one. That gap is why you leave headroom.`,lab:'vu'},
+ {id:'isl',name:'Inverse square law',group:'space',short:'Double the distance and the level drops about 6 dB.',
+  defn:`Sound spreading from a point source in open space covers an area that grows with the <b>square of the distance</b>, so its intensity falls as <b>1 ÷ distance²</b>. In practice: <b>every doubling of distance drops the level about 6 dB</b> (half the pressure, a quarter of the intensity), and ten times the distance drops it 20 dB. The law describes the <b>direct</b> sound in a free field; in a room, reflections eventually take over.`,
+  formula:'level change (dB) = 20 × log₁₀(d₁ ÷ d₂)',
+  why:`It’s why small moves close to a mic swing the level so much, why distance is a level control, and why the direct sound fades into the room as you back away (see critical distance).`,lab:'isl'},
+ {id:'cd',name:'Critical distance',group:'space',short:'Where the direct sound and the room’s reverberant sound are equal.',
+  defn:`In a room you hear two things: the <b>direct sound</b>, which falls about 6 dB per doubling of distance, and the <b>reverberant sound</b>, the room’s reflections, which is roughly the <b>same level everywhere</b> in the room. The <b>critical distance</b> is the distance from the source at which the two are <b>equal</b>. Closer than that, the direct sound dominates (clear, close, present). Farther away, the room dominates (distant, washy, less intelligible).`,
+  formula:'D<sub>c</sub> ≈ 0.057 × √(Q × V ÷ RT60)   (metres; V = room volume in m³, RT60 in seconds, Q = source directivity)',
+  param:'A <b>deader</b> room (shorter RT60) or a bigger one pushes critical distance farther out; a more reverberant room pulls it in. A <b>directional mic</b> hears the direct sound as if from farther away: a cardioid’s “distance factor” is about 1.7× an omni’s.',
+  why:`It is the line every mic placement decision is made around: place inside it for a clear, close sound, and outside it for a room mic. Directional mics let you work a little farther out.`,lab:'cd'}
+];
+const byId=Object.fromEntries(C.map(c=>[c.id,c])); const TOTAL=C.length;
+
+/* ============ progress ============ */
+const KEY='ue_fundamentals2_v1'; let store={mastered:{},quizBest:0};
+try{const s=localStorage.getItem(KEY);if(s)store=Object.assign(store,JSON.parse(s));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+function masteredCount(){return C.filter(c=>(store.mastered[c.id]||0)>=2).length;}
+function refreshProgress(){const m=masteredCount();const b=document.querySelector('#prog b');if(b)b.innerHTML='<span id="pm">'+m+'</span>/'+TOTAL;const bar=document.getElementById('pbar');if(bar)bar.style.width=(100*m/TOTAL)+'%';}
+
+/* ============ helpers ============ */
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const x in a){if(x==='class')e.className=a[x];else if(x==='html')e.innerHTML=a[x];else e.setAttribute(x,a[x]);}k.flat().forEach(c=>e.append(c));return e;};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+/* ============ audio engine ============ */
+let actx=null,chain=null,owner=null;
+function ctx(){if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return actx;}
+function stopAudio(){
+  if(owner){const o=owner;owner=null;o.setPlaying(false);}
+  if(chain&&actx){try{const t=actx.currentTime;chain.g.gain.cancelScheduledValues(t);chain.g.gain.setTargetAtTime(0,t,0.02);const ss=chain.sources;setTimeout(()=>ss.forEach(s=>{try{s.stop();}catch(e){}}),160);}catch(e){}}
+  chain=null;
+}
+function startChain(build,vol){const c=ctx();if(!c)return null;if(c.state==='suspended')c.resume();stopAudio();try{const g=c.createGain();g.gain.value=0;g.connect(c.destination);const parts=build(c,g);g.gain.setTargetAtTime(vol==null?0.14:vol,c.currentTime,0.03);chain={g,sources:parts.sources,extra:parts.extra||{}};return chain;}catch(e){return null;}}
+// a station that owns the chain while it plays
+function own(o){owner=o;o.setPlaying(true);}
+
+/* ---- synthesized sources (cached) ---- */
+let BUF={};
+function chanFill(b,fn){for(let ch=0;ch<b.numberOfChannels;ch++)fn(b.getChannelData(ch),ch);}
+function pinkBuf(c){if(BUF.pink)return BUF.pink;const n=c.sampleRate*2,b=c.createBuffer(2,n,c.sampleRate);chanFill(b,d=>{let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<d.length;i++){const w=Math.random()*2-1;b0=0.99886*b0+w*0.0555179;b1=0.99332*b1+w*0.0750759;b2=0.96900*b2+w*0.1538520;b3=0.86650*b3+w*0.3104856;b4=0.55000*b4+w*0.5329522;b5=-0.7616*b5-w*0.0168980;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.09;b6=w*0.115926;}});return BUF.pink=b;}
+function addHit(d,sr,t,type,amp){const s=Math.floor(t*sr);
+ if(type==='kick'){for(let i=0;i<sr*0.32&&s+i<d.length;i++){const tt=i/sr,f=120*Math.exp(-tt*32)+46;d[s+i]+=Math.sin(2*Math.PI*f*tt)*Math.exp(-tt*7)*amp;}}
+ else if(type==='snare'){for(let i=0;i<sr*0.2&&s+i<d.length;i++){const tt=i/sr;d[s+i]+=((Math.random()*2-1)*0.7+Math.sin(2*Math.PI*190*tt)*0.5)*Math.exp(-tt*22)*amp;}}
+ else if(type==='hat'){for(let i=0;i<sr*0.05&&s+i<d.length;i++){const tt=i/sr;d[s+i]+=(Math.random()*2-1)*Math.exp(-tt*120)*amp*0.6;}}}
+function grooveBuf(c){if(BUF.groove)return BUF.groove;const sr=c.sampleRate,b=c.createBuffer(1,sr*2,sr);const beat=0.5,d=b.getChannelData(0);
+  for(let k=0;k<4;k++)addHit(d,sr,k*beat,'kick',k%2?0.6:1.0);addHit(d,sr,beat,'snare',0.8);addHit(d,sr,3*beat,'snare',0.9);for(let k=0;k<8;k++)addHit(d,sr,k*beat/2,'hat',k%2?0.35:0.6);
+  return BUF.groove=b;}
+function chordBuf(c){if(BUF.chord)return BUF.chord;const sr=c.sampleRate,len=sr*2,b=c.createBuffer(1,len,sr),d=b.getChannelData(0);
+  // frequencies on a 0.5 Hz grid so the 2-second loop is seamless
+  const fs=[131,165,196,261.5];for(let i=0;i<len;i++){const t=i/sr;let s=0;fs.forEach(f=>{s+=Math.sin(2*Math.PI*f*t)+0.3*Math.sin(2*Math.PI*2*f*t)+0.12*Math.sin(2*Math.PI*3*f*t);});d[i]=s*0.09;}return BUF.chord=b;}
+function pianoBuf(c){if(BUF.piano)return BUF.piano;const sr=c.sampleRate,len=Math.floor(sr*2.4),b=c.createBuffer(1,len,sr),d=b.getChannelData(0);
+  const notes=[[0,48],[0.3,55],[0.6,60],[0.9,64],[1.2,67],[1.5,72],[1.8,64],[2.1,55]];
+  notes.forEach(([t0,n])=>{const f=440*Math.pow(2,(n-69)/12),s=Math.floor(t0*sr),N=Math.floor(sr*1.4),fade=Math.floor(sr*0.15);
+    for(let k=1;k<=10;k++){const fk=f*k*Math.sqrt(1+0.0004*k*k);if(fk>sr/2.2)break;const ak=0.3/Math.pow(k,1.1),dk=2.2+k*0.9,w=2*Math.PI*fk/sr;
+      for(let i=0;i<N;i++){let e=Math.exp(-dk*i/sr)*Math.min(1,i/(0.002*sr));if(i>N-fade)e*=(N-i)/fade;d[(s+i)%len]+=ak*Math.sin(w*i)*e;}}
+    const hn=Math.floor(sr*0.006);for(let i=0;i<hn;i++)d[(s+i)%len]+=(Math.random()*2-1)*0.12*(1-i/hn);});
+  let pk=0;for(let i=0;i<len;i++)pk=Math.max(pk,Math.abs(d[i]));for(let i=0;i<len;i++)d[i]*=0.6/pk;return BUF.piano=b;}
+function roomIR(c,rt){const key='ir'+rt;if(BUF[key])return BUF[key];const sr=c.sampleRate,len=Math.floor(sr*Math.min(rt*1.15,5)),b=c.createBuffer(2,len,sr);
+  const pre=Math.floor(sr*Math.min(0.03,0.006+rt*0.01));
+  chanFill(b,d=>{let lp=0;const k=rt>1.5?0.6:0.4;for(let i=0;i<len;i++){const t=i/sr;const s=(Math.random()*2-1)*Math.exp(-6.91*t/rt);lp=lp*k+s*(1-k);d[i]=i<pre?0:lp;}});return BUF[key]=b;}
+function looper(c,b){const s=c.createBufferSource();s.buffer=b;s.loop=true;return s;}
+
+/* ============ animation ============ */
+let anims=[];
+function animate(fn){let id;function loop(t){fn(t);id=requestAnimationFrame(loop);}id=requestAnimationFrame(loop);const h={cancel(){cancelAnimationFrame(id);}};anims.push(h);return h;}
+function clearAnims(){anims.forEach(h=>h.cancel());anims=[];}
+function ready(cv,c){const dpr=window.devicePixelRatio||1;const w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}c.setTransform(dpr,0,0,dpr,0,0);}
+const view=document.getElementById('view');
+
+/* ============ HOW TO ============ */
+function renderHowto(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'A method for studying on your own'),
+    el('h1',{class:'page'},'Describe a sound, measure it, then walk away from it.'),
+    el('p',{class:'lead'},'Part 1 was what a sound wave is. Part 2 is how we describe a particular sound (its waveform, timbre, and envelope), how we put a number on how loud it is (decibels, SPL, and meters), and what happens to it as you move away from it in a room (the inverse square law and critical distance). Every one of these you can hear, so put on headphones.'));
+  const steps=[
+    ['Learn the idea','Read each concept card and its “why it matters.” Tap for the full definition, the formula where there is one, and the rules of thumb (6 dB per doubling, +10 dB ≈ twice as loud).'],
+    ['Hear it in the Lab','Six stations. Build a timbre from harmonics, shape an envelope and play it, compare level changes in dB, watch a VU needle miss a snare hit, walk away from a source, and find the critical distance of a concert hall.'],
+    ['Lock it in with flashcards','Recall each concept cold: the definition, a number or formula, and one example. Two clean passes marks it mastered.'],
+    ['Test the connections','The quiz checks the definitions and the reasoning that links them: timbre to harmonics, dB to SPL, inverse square to critical distance.']
+  ];
+  const wrap=el('div',{class:'steps'});
+  steps.forEach(s=>wrap.append(el('div',{class:'step'},el('div',{class:'n'}),el('div',{},el('h3',{},s[0]),el('p',{},s[1])))));
+  view.append(wrap);
+  view.append(el('div',{class:'callout',html:'<b>The throughline:</b> a sound has a <b>shape</b> (its harmonics give it timbre; its envelope gives it a life over time), a <b>level</b> (always a ratio, in dB; SPL is the one with a fixed reference), and a <b>place</b> (it fades 6 dB per doubling of distance until the room’s sound takes over at the critical distance).'}));
+  const b=el('button',{class:'btn gold'},'Continue to the Learn tab →');b.onclick=()=>setTab('learn');
+  view.append(el('div',{style:'text-align:center;margin-top:2px'},b));
+}
+
+/* ============ LEARN ============ */
+function openDetail(c){
+  const p=document.getElementById('panel');p.innerHTML='';
+  const head=el('div',{class:'head'},el('div',{class:'art',html:VIZ[c.id]()}),el('div',{},el('h2',{},c.name),el('div',{class:'sub'},G[c.group].k)),el('button',{class:'x','aria-label':'Close'},'×'));
+  head.querySelector('.x').onclick=closeDetail;
+  const body=el('div',{class:'body'});
+  body.append(el('p',{html:c.defn}));
+  if(c.formula)body.append(el('div',{class:'formula',html:c.formula}));
+  if(c.param)body.append(el('div',{class:'note param',html:'<b>Worth knowing: </b>'+c.param}));
+  body.append(el('div',{class:'note why',html:'<b>Why it matters: </b>'+c.why}));
+  if(c.lab){const b=el('button',{class:'btn gold sm',style:'margin-top:14px'},'▶ Hear it in the Lab');b.onclick=()=>{closeDetail();setTab('lab');setTimeout(()=>{const t=document.getElementById('st-'+c.lab);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});},120);};body.append(b);}
+  p.append(head,body);document.getElementById('overlay').classList.add('on');
+}
+function closeDetail(){document.getElementById('overlay').classList.remove('on');}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeDetail();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+function renderLearn(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'8 concepts'),el('h1',{class:'page'},'Learn'));
+  ['shape','level','space'].forEach(g=>{
+    view.append(el('div',{class:'grouphead'},el('div',{class:'k'},G[g].k),el('div',{class:'t'},G[g].t),el('div',{class:'d'},G[g].d)));
+    const grid=el('div',{class:'grid'});
+    C.filter(c=>c.group===g).forEach(c=>{
+      const card=el('div',{class:'ccard',tabindex:'0',role:'button'},el('div',{class:'art',html:VIZ[c.id]()}),el('h3',{},c.name),el('p',{},c.short));
+      card.onclick=()=>openDetail(c);card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openDetail(c);}};
+      grid.append(card);
+    });
+    view.append(grid);
+  });
+  const b=el('button',{class:'btn gold'},'Go to the Lab →');b.onclick=()=>setTab('lab');
+  view.append(el('div',{style:'text-align:center;margin-top:26px'},b));
+}
+
+/* ============ LAB helpers ============ */
+function station(id,title,sub){return el('div',{class:'station',id:'st-'+id},el('h3',{},title),el('div',{class:'ssub'},sub));}
+function ctlRow(label,input,valEl){return el('div',{class:'ctl'},el('label',{},label),input,valEl);}
+function segRow(label,items,cur,onPick){const seg=el('div',{class:'segs'});const btns=items.map(([k,l])=>{const b=el('button',{class:'btn tog sm','aria-pressed':String(k===cur)},l);b.onclick=()=>{btns.forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');onPick(k);};seg.append(b);return b;});const row=el('div',{class:'ctl'},el('label',{},label),seg,el('div',{}));row.pick=k=>{btns.forEach((b,i)=>b.setAttribute('aria-pressed',String(items[i][0]===k)));};return row;}
+function slider(min,max,step,val){return el('input',{type:'range',min:String(min),max:String(max),step:String(step),value:String(val)});}
+function playButton(o,start){const btn=el('button',{class:'btn gold'},'▶ Play');
+  o.setPlaying=on=>{o.playing=on;btn.textContent=on?'■ Stop':'▶ Play';btn.classList.toggle('gold',!on);btn.classList.toggle('primary',on);};
+  btn.onclick=()=>{if(o.playing)stopAudio();else{start();if(chain)own(o);}};return btn;}
+const isMine=o=>o.playing&&chain&&owner===o;
+function axisLabel(c,s,x,y,col){c.fillStyle=col||'rgba(255,255,255,0.45)';c.fillText(s,x,y);}
+
+/* ---- 1. Waveform & Timbre ---- */
+function timbreStation(){
+  const st=station('timbre','Waveform & Timbre','Same pitch, same level. Change only the harmonics and hear the timbre change. Drag the bars to build your own.');
+  const cv=el('canvas');st.append(el('div',{class:'scope tall drag'},cv));view.append(st);
+  const S={a:recipe('saw'),f:220,name:'saw'};const o={playing:false};
+  const powNorm=()=>{let s=0;S.a.forEach(v=>s+=v*v);return 0.28/Math.sqrt(Math.max(s,1e-6));};
+  function wave(c){const real=new Float32Array(NH+1),imag=new Float32Array(NH+1);for(let n=1;n<=NH;n++)imag[n]=S.a[n-1];return c.createPeriodicWave(real,imag,{disableNormalization:true});}
+  function apply(){if(!isMine(o))return;const x=chain.extra;x.osc.setPeriodicWave(wave(actx));x.osc.frequency.setTargetAtTime(S.f,actx.currentTime,0.02);x.lvl.gain.setTargetAtTime(powNorm(),actx.currentTime,0.02);}
+  const presets=[['sine','Sine'],['triangle','Triangle'],['square','Square'],['saw','Sawtooth'],['flute','Flute-like'],['clarinet','Clarinet-like'],['brass','Brass-like']];
+  const pr=segRow('Recipe',presets,S.name,k=>{S.name=k;S.a=recipe(k);apply();});st.append(pr);
+  const fIn=slider(0,100,0.1,100*Math.log(S.f/55)/Math.log(16)),fVal=el('div',{class:'val'},fmtHz(S.f));
+  fIn.oninput=()=>{S.f=55*Math.pow(16,fIn.value/100);fVal.textContent=fmtHz(S.f);apply();};
+  st.append(ctlRow('Pitch',fIn,fVal));
+  const rd=el('div',{class:'readout'});
+  st.append(el('div',{class:'lab-actions'},playButton(o,()=>startChain((c,g)=>{const osc=c.createOscillator();osc.setPeriodicWave(wave(c));osc.frequency.value=S.f;const lvl=c.createGain();lvl.gain.value=powNorm();osc.connect(lvl).connect(g);osc.start();return{sources:[osc],extra:{osc,lvl}};},0.5)),rd));
+  st.append(el('div',{class:'tip',html:'<b>Notice:</b> every recipe plays the <b>same pitch at the same level</b>; only the harmonics change, and the sound changes completely. That’s timbre. Square and clarinet-like have only <b>odd</b> harmonics (hollow); sawtooth and brass-like have <b>all</b> of them (bright, buzzy). Sine has none: pure. Change the pitch and the timbre comes along with it.'}));
+  st.append(el('div',{class:'notice',html:'The instrument recipes are simplified, steady-state harmonic spectra. Real instruments also change their harmonics over the course of each note.'}));
+  // drag bars
+  let L=null,drag=false;
+  function setBar(e){if(!L)return;const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;if(px<L.bx0)return;const n=clamp(Math.floor((px-L.bx0)/L.bw),0,NH-1);const v=clamp((L.by1-py)/(L.by1-L.by0),0,1);const sg=S.a[n]<0?-1:1;S.a[n]=sg*v;if(S.name!=='custom'){S.name='custom';pr.pick('custom');}apply();}
+  cv.addEventListener('pointerdown',e=>{drag=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}setBar(e);});
+  cv.addEventListener('pointermove',e=>{if(drag)setBar(e);});['pointerup','pointercancel'].forEach(v=>cv.addEventListener(v,()=>drag=false));
+  const cx=cv.getContext('2d');let last='';
+  animate(t=>{ready(cv,cx);const w=cv.clientWidth,h=cv.clientHeight;cx.clearRect(0,0,w,h);
+    const narrow=w<560,split=narrow?0:w*0.48;
+    // waveform panel
+    const wx0=10,wx1=narrow?w-10:split-10,wy0=22,wy1=narrow?h*0.46:h-24,mid=(wy0+wy1)/2,A=(wy1-wy0)*0.42;
+    cx.strokeStyle='rgba(255,255,255,0.16)';cx.lineWidth=1;cx.beginPath();cx.moveTo(wx0,mid);cx.lineTo(wx1,mid);cx.stroke();
+    let pk=0;for(let i=0;i<=256;i++)pk=Math.max(pk,Math.abs(waveVal(S.a,2*Math.PI*i/256)));pk=Math.max(pk,1e-4);
+    cx.strokeStyle='#E0A458';cx.lineWidth=2.4;cx.beginPath();for(let i=0;i<=wx1-wx0;i++){const ph=2*Math.PI*2*i/(wx1-wx0);const y=mid-A*waveVal(S.a,ph)/pk;i?cx.lineTo(wx0+i,y):cx.moveTo(wx0+i,y);}cx.stroke();
+    cx.font='10px monospace';axisLabel(cx,'WAVEFORM · 2 cycles',wx0,14);
+    // spectrum panel
+    const bx0=narrow?40:split+30,bx1=w-12,by0=narrow?h*0.56:30,by1=h-26,bw=(bx1-bx0)/NH;L={bx0,bw,by0,by1};
+    axisLabel(cx,'HARMONICS · drag the bars',narrow?10:split+10,narrow?h*0.53:14);
+    cx.strokeStyle='rgba(255,255,255,0.16)';cx.beginPath();cx.moveTo(bx0,by1);cx.lineTo(bx1,by1);cx.stroke();
+    for(let n=1;n<=NH;n++){const v=Math.abs(S.a[n-1]),x=bx0+(n-1)*bw+bw*0.15,bh=(by1-by0)*v;cx.fillStyle='rgba(255,255,255,0.05)';cx.fillRect(x,by0,bw*0.7,by1-by0);cx.fillStyle=n===1?'#E0A458':'#3E9C92';cx.fillRect(x,by1-bh,bw*0.7,bh);
+      if(n===1||n%2===0&&!narrow||n%4===0){cx.fillStyle='rgba(255,255,255,0.45)';cx.fillText(String(n),x+bw*0.35-3,by1+12);}}
+    axisLabel(cx,'1 = fundamental',bx0,by1+24>h-2?by1+12:by1+24);
+    const hi=S.a.reduce((m,v,i)=>Math.abs(v)>0.005?i+1:m,1);
+    const txt='Pitch <b>'+fmtHz(S.f)+'</b> · harmonics up to <b>'+fmtHz(S.f*hi)+'</b> · level matched across recipes';
+    if(txt!==last){rd.innerHTML=txt;last=txt;}
+  });
+}
+
+/* ---- 2. Envelope ---- */
+const ENV_PRESETS={piano:{A:0.004,D:1.6,S:0,R:0.35},organ:{A:0.006,D:0.01,S:1,R:0.04},strings:{A:0.6,D:0.3,S:0.8,R:0.9},pluck:{A:0.003,D:0.35,S:0,R:0.12},pad:{A:1.4,D:0.8,S:0.7,R:2.2}};
+function envStation(){
+  const st=station('env','Envelope (ADSR)','Shape attack, decay, sustain, and release, then play a note. Hold the button to keep the note on; let go to start the release.');
+  const cv=el('canvas');st.append(el('div',{class:'scope'},cv));view.append(st);
+  const E=Object.assign({},ENV_PRESETS.strings);const o={playing:false,setPlaying(on){this.playing=on;}};
+  let t0=null,t1=null,vR=0;
+  const now=()=>actx?actx.currentTime:0;
+  function envAt(t){if(t0===null)return 0;const held=t1===null||t<t1;if(held){const dt=t-t0;if(dt<E.A)return dt/E.A;if(dt<E.A+E.D)return 1-(1-E.S)*(dt-E.A)/E.D;return E.S;}const dr=t-t1;return Math.max(0,vR*(1-dr/E.R));}
+  function ensure(){if(isMine(o))return true;startChain((c,g)=>{const osc=c.createOscillator();const re=new Float32Array(9),im=new Float32Array(9);[0,1,0.5,0.33,0.25,0.2,0.14,0.1,0.07].forEach((v,i)=>im[i]=v);osc.setPeriodicWave(c.createPeriodicWave(re,im));osc.frequency.value=220;const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;const env=c.createGain();env.gain.value=0;osc.connect(lp).connect(env).connect(g);osc.start();return{sources:[osc],extra:{env}};},0.35);if(chain){own(o);t0=null;t1=null;return true;}return false;}
+  function noteOn(){if(!ensure())return;const t=now(),g=chain.extra.env.gain,v=envAt(t);t0=t-(v*E.A);t1=null;g.cancelScheduledValues(t);g.setValueAtTime(v,t);g.linearRampToValueAtTime(1,t0+E.A);g.linearRampToValueAtTime(Math.max(E.S,0),t0+E.A+E.D);}
+  function noteOff(){if(!isMine(o)||t0===null||t1!==null)return;const t=now(),g=chain.extra.env.gain;vR=envAt(t);t1=t;g.cancelScheduledValues(t);g.setValueAtTime(vR,t);g.linearRampToValueAtTime(0,t+E.R);}
+  const rows={};
+  const mk=(key,label,min,max,step,fmt)=>{const toS=v=>key==='S'?v/100:Math.pow(10,v)/1000;const toV=s=>key==='S'?s*100:Math.log10(s*1000);
+    const inp=slider(min,max,step,toV(E[key])),val=el('div',{class:'val'},fmt(E[key]));inp.oninput=()=>{E[key]=toS(+inp.value);val.textContent=fmt(E[key]);preset.pick('');};rows[key]={inp,val,toV,fmt};return ctlRow(label,inp,val);};
+  const ms=s=>s<1?Math.round(s*1000)+' ms':s.toFixed(2)+' s';
+  const preset=segRow('Preset',[['piano','Piano-like'],['organ','Organ-like'],['strings','Bowed strings'],['pluck','Pluck'],['pad','Slow pad']],'strings',k=>{Object.assign(E,ENV_PRESETS[k]);for(const key in rows){rows[key].inp.value=rows[key].toV(E[key]);rows[key].val.textContent=rows[key].fmt(E[key]);}});
+  st.append(preset,mk('A','Attack',0,3.4,0.01,ms),mk('D','Decay',1,3.4,0.01,ms),mk('S','Sustain level',0,100,1,s=>Math.round(s*100)+'%'),mk('R','Release',1,3.5,0.01,ms));
+  const hold=el('button',{class:'btn gold hold'},'▶ Hold to play');
+  hold.addEventListener('pointerdown',e=>{e.preventDefault();try{hold.setPointerCapture(e.pointerId);}catch(_){}noteOn();});
+  ['pointerup','pointercancel'].forEach(v=>hold.addEventListener(v,noteOff));
+  hold.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat){e.preventDefault();noteOn();}});
+  hold.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();noteOff();}});
+  const one=el('button',{class:'btn ghost'},'Play a 1-second note');one.onclick=()=>{noteOn();setTimeout(noteOff,1000);};
+  const rd=el('div',{class:'readout'});
+  st.append(el('div',{class:'lab-actions'},hold,one,rd));
+  st.append(el('div',{class:'tip',html:'<b>Notice:</b> <b>Piano-like</b> sets sustain to 0%, so even if you keep holding, the note dies away during the decay, just like a real piano. <b>Organ-like</b> holds full level for as long as you hold. <b>Bowed strings</b> swells in. Sustain is a <i>level</i>, not a time: the note sits there as long as you hold it.'}));
+  const cx=cv.getContext('2d');let last='';
+  animate(()=>{ready(cv,cx);const w=cv.clientWidth,h=cv.clientHeight;cx.clearRect(0,0,w,h);
+    const x0=14,x1=w-14,y0=26,y1=h-30,holdT=0.8,total=E.A+E.D+holdT+E.R,X=t=>x0+(x1-x0)*t/total,Y=v=>y1-(y1-y0)*v;
+    cx.strokeStyle='rgba(255,255,255,0.14)';cx.lineWidth=1;cx.beginPath();cx.moveTo(x0,y1);cx.lineTo(x1,y1);cx.stroke();
+    const pts=[[0,0],[E.A,1],[E.A+E.D,E.S],[E.A+E.D+holdT,E.S],[total,0]];
+    const cols=['#E0A458','#3E9C92','#cfdaec','#C7553E'],labs=['A','D','S','R'];
+    cx.font='bold 12px monospace';
+    for(let i=0;i<4;i++){cx.strokeStyle=cols[i];cx.lineWidth=2.8;cx.beginPath();cx.moveTo(X(pts[i][0]),Y(pts[i][1]));cx.lineTo(X(pts[i+1][0]),Y(pts[i+1][1]));cx.stroke();
+      const mx=(X(pts[i][0])+X(pts[i+1][0]))/2;cx.fillStyle=cols[i];cx.fillText(labs[i],mx-4,h-12);}
+    cx.font='10px monospace';cx.setLineDash([4,4]);cx.strokeStyle='rgba(255,255,255,0.3)';cx.beginPath();cx.moveTo(x0,Y(E.S));cx.lineTo(x1,Y(E.S));cx.stroke();cx.setLineDash([]);
+    axisLabel(cx,'sustain level '+Math.round(E.S*100)+'% (held as long as the note is on)',x0+4,Math.max(14,Y(E.S)-6));
+    axisLabel(cx,'LEVEL OVER TIME',x0,14);
+    // live dot
+    if(isMine(o)&&t0!==null){const t=now();let tv;if(t1===null){tv=Math.min(t-t0,E.A+E.D+holdT*0.999);if(t-t0>E.A+E.D)tv=E.A+E.D+Math.min(holdT*0.98,(t-t0-E.A-E.D)%holdT);}else{tv=E.A+E.D+holdT+Math.min(E.R,t-t1);}
+      const v=envAt(t);cx.fillStyle='#fff';cx.beginPath();cx.arc(X(tv),Y(v),5,0,7);cx.fill();}
+    const txt='A <b>'+ms(E.A)+'</b> · D <b>'+ms(E.D)+'</b> · S <b>'+Math.round(E.S*100)+'%</b> · R <b>'+ms(E.R)+'</b>';if(txt!==last){rd.innerHTML=txt;last=txt;}
+  });
+}
+
+/* ---- 3. Decibels & SPL ---- */
+const LADDER=[[0,'threshold of hearing'],[30,'whisper'],[40,'quiet room'],[60,'conversation (1 m)'],[85,'long-exposure risk begins'],[100,'loud concert / club'],[120,'threshold of discomfort'],[130,'threshold of pain'],[140,'jet engine, close by']];
+function dbStation(){
+  const st=station('db','Decibels & SPL','A decibel is a ratio. Compare a reference to a changed level and hear what +3, +6, and +10 dB really mean. Then see where it lands on the SPL scale.');
+  const cv=el('canvas');st.append(el('div',{class:'scope tall'},cv));view.append(st);
+  const S={db:6,mode:'alt',src:'pink',ref:60};const o={playing:false};
+  const REF_AMP={pink:0.05,tone:0.03};
+  let cur='ref';
+  function lvl(which){return REF_AMP[S.src]*(which==='chg'?dbLin(S.db):1);}
+  function apply(){if(!isMine(o))return;chain.extra.g2.gain.setTargetAtTime(lvl(cur),actx.currentTime,0.012);}
+  const dIn=slider(-20,20,0.5,S.db),dVal=el('div',{class:'val'});const dTxt=()=>dVal.textContent=(S.db>0?'+':'')+S.db.toFixed(1)+' dB';dTxt();
+  dIn.oninput=()=>{S.db=+dIn.value;dTxt();apply();};
+  const quick=el('div',{class:'segs'});[1,3,6,10,-6,-10].forEach(v=>{const b=el('button',{class:'btn ghost sm'},(v>0?'+':'')+v+' dB');b.onclick=()=>{S.db=v;dIn.value=v;dTxt();apply();};quick.append(b);});
+  st.append(ctlRow('Change',dIn,dVal),el('div',{class:'ctl'},el('label',{},'Quick set'),quick,el('div',{})));
+  st.append(segRow('Listen to',[['alt','Alternate (1 s each)'],['ref','Reference'],['chg','Changed']],S.mode,k=>{S.mode=k;if(k!=='alt'){cur=k;apply();}}));
+  st.append(segRow('Source',[['pink','Pink noise'],['tone','1 kHz tone']],S.src,k=>{S.src=k;if(o.playing){stopAudio();start();if(chain)own(o);}}));
+  st.append(segRow('If reference =',[['40','40 dB SPL'],['60','60 dB SPL'],['85','85 dB SPL']],String(S.ref),k=>{S.ref=+k;}));
+  function start(){startChain((c,g)=>{let src;if(S.src==='pink'){src=looper(c,pinkBuf(c));src.start();}else{src=c.createOscillator();src.frequency.value=1000;src.start();}const g2=c.createGain();g2.gain.value=lvl(cur);src.connect(g2).connect(g);return{sources:[src],extra:{g2}};},1);}
+  const rd=el('div',{class:'readout'});
+  st.append(el('div',{class:'lab-actions'},playButton(o,start),rd));
+  st.append(el('div',{class:'tip',html:'<b>Notice:</b> +6 dB <i>doubles the amplitude</i> (look at the waves), yet it doesn’t sound twice as loud; that takes about <b>+10 dB</b>. A 1 dB change is barely noticeable. That mismatch between the numbers and your ears is exactly why we use a logarithmic scale.'}));
+  st.append(el('div',{class:'notice',html:'Your headphones set the real SPL, so this Lab plays <i>relative</i> changes only. The “If reference =” buttons show where the same dB change would land on the SPL scale if the reference sound were that loud in the room.'}));
+  const cx=cv.getContext('2d');let last='',lastPh=-1;
+  animate(t=>{ready(cv,cx);const w=cv.clientWidth,h=cv.clientHeight;cx.clearRect(0,0,w,h);
+    // alternate playback
+    if(isMine(o)&&S.mode==='alt'){const ph=Math.floor(actx.currentTime)%2;if(ph!==lastPh){lastPh=ph;cur=ph?'chg':'ref';apply();}}
+    const narrow=w<560,split=narrow?w:w*0.58;
+    // waves: reference vs changed (linear amplitude)
+    const lx0=10,lx1=split-12,rowH=narrow?(h-110)/2:(h-40)/2;
+    const ratio=dbLin(S.db);// the louder of the two fills the row; the other is drawn to true linear scale
+    const AM=rowH*0.34,A1=S.db>0?AM/ratio:AM,A2=A1*ratio;
+    [[A1,'REFERENCE','#3E9C92','ref'],[A2,'CHANGED  '+(S.db>0?'+':'')+S.db.toFixed(1)+' dB','#E0A458','chg']].forEach(([A,lab,col,k],i)=>{
+      const mid=26+rowH*(i+0.5);cx.strokeStyle='rgba(255,255,255,0.12)';cx.lineWidth=1;cx.beginPath();cx.moveTo(lx0,mid);cx.lineTo(lx1,mid);cx.stroke();
+      cx.strokeStyle=col;cx.lineWidth=2.2;cx.beginPath();for(let x=0;x<=lx1-lx0;x++){const y=mid-A*Math.sin(2*Math.PI*6*x/(lx1-lx0)+t/300);x?cx.lineTo(lx0+x,y):cx.moveTo(lx0+x,y);}cx.stroke();
+      const on=isMine(o)&&cur===k;cx.font=(on?'bold ':'')+'10px monospace';cx.fillStyle=on?col:'rgba(255,255,255,0.5)';cx.fillText((on?'▶ ':'')+lab,lx0,mid-rowH*0.5+12);});
+    cx.font='10px monospace';axisLabel(cx,'amplitude ×'+ratio.toFixed(2),lx1-90,narrow?26+rowH*2+8:h-8);
+    if(narrow){const bx0=14,bx1=w-14,by=h-38,BX=d=>bx0+(bx1-bx0)*d/140;cx.fillStyle='rgba(255,255,255,0.1)';cx.fillRect(bx0,by-4,bx1-bx0,8);cx.fillStyle='rgba(224,164,88,0.4)';cx.fillRect(BX(85),by-4,BX(120)-BX(85),8);cx.fillStyle='rgba(199,85,62,0.7)';cx.fillRect(BX(120),by-4,BX(140)-BX(120),8);
+      [0,30,60,85,100,130].forEach(d=>{cx.fillStyle='rgba(255,255,255,0.55)';cx.fillText(String(d),BX(d)-6,by+20);});axisLabel(cx,'dB SPL',bx0,by-26);
+      [[S.ref,'#3E9C92'],[clamp(S.ref+S.db,0,140),'#E0A458']].forEach(([d,col])=>{cx.fillStyle=col;cx.beginPath();cx.moveTo(BX(d),by-6);cx.lineTo(BX(d)-6,by-16);cx.lineTo(BX(d)+6,by-16);cx.fill();});}
+    // SPL ladder
+    if(!narrow){const x=split+46,ly0=16,ly1=h-16,Y=d=>ly1-(ly1-ly0)*d/140;
+      cx.fillStyle='rgba(255,255,255,0.08)';cx.fillRect(x-5,ly0,10,ly1-ly0);cx.fillStyle='rgba(224,164,88,0.35)';cx.fillRect(x-5,Y(120),10,Y(85)-Y(120));cx.fillStyle='rgba(199,85,62,0.6)';cx.fillRect(x-5,Y(140),10,Y(120)-Y(140));
+      LADDER.forEach(([d,s])=>{cx.strokeStyle='rgba(255,255,255,0.35)';cx.beginPath();cx.moveTo(x+6,Y(d));cx.lineTo(x+12,Y(d));cx.stroke();cx.fillStyle=d>=120?'rgba(199,85,62,0.95)':d>=85?'rgba(224,164,88,0.9)':'rgba(255,255,255,0.55)';cx.fillText(d+' · '+s,x+16,Y(d)+3);});
+      const rY=Y(S.ref),cY=Y(clamp(S.ref+S.db,0,140));cx.fillStyle='#3E9C92';cx.beginPath();cx.moveTo(x-8,rY);cx.lineTo(x-18,rY-6);cx.lineTo(x-18,rY+6);cx.fill();
+      cx.fillStyle='#E0A458';cx.beginPath();cx.moveTo(x-8,cY);cx.lineTo(x-18,cY-6);cx.lineTo(x-18,cY+6);cx.fill();
+      cx.fillStyle='rgba(255,255,255,0.5)';cx.fillText('dB SPL',x-20,ly0-4);}
+    const pr=ratio,pw=dbLin(S.db)**2,ld=Math.pow(2,S.db/10),spl=S.ref+S.db;
+    const txt=(S.db>0?'+':'')+S.db.toFixed(1)+' dB = <b>×'+pr.toFixed(2)+'</b> pressure · ×'+pw.toFixed(2)+' power · ≈ ×'+ld.toFixed(2)+' as loud · '+S.ref+' → <b>'+spl.toFixed(1)+' dB SPL</b>';
+    if(txt!==last){rd.innerHTML=txt;last=txt;}
+  });
+}
+
+/* ---- 4. VU vs Peak ---- */
+function vuStation(){
+  const st=station('vu','VU meter vs. peak meter','The same signal on two meters. The VU averages over about 300 ms; the peak meter catches every sample. Watch what each one does with a snare hit.');
+  const cv=el('canvas');st.append(el('div',{class:'scope tall'},cv));view.append(st);
+  const S={src:'groove',trim:-6};const o={playing:false};
+  const tIn=slider(-24,0,0.5,S.trim),tVal=el('div',{class:'val'});const tTxt=()=>tVal.textContent=(S.trim>0?'+':'')+S.trim.toFixed(1)+' dB';tTxt();
+  tIn.oninput=()=>{S.trim=+tIn.value;tTxt();if(isMine(o))chain.extra.trim.gain.setTargetAtTime(dbLin(S.trim),actx.currentTime,0.02);};
+  st.append(segRow('Source',[['groove','Drum groove'],['chord','Sustained chord']],S.src,k=>{S.src=k;if(o.playing){stopAudio();start();if(chain)own(o);}}));
+  st.append(ctlRow('Input trim',tIn,tVal));
+  function start(){startChain((c,g)=>{const src=looper(c,S.src==='groove'?grooveBuf(c):chordBuf(c));const trim=c.createGain();trim.gain.value=dbLin(S.trim);const an=c.createAnalyser();an.fftSize=2048;src.connect(trim).connect(an);trim.connect(g);src.start();return{sources:[src],extra:{trim,an,buf:new Float32Array(2048)}};},0.6);}
+  const rd=el('div',{class:'readout'});
+  st.append(el('div',{class:'lab-actions'},playButton(o,start),rd));
+  st.append(el('div',{class:'tip',html:'<b>Notice:</b> with the <b>drum groove</b>, the peak meter jumps on every hit while the VU needle barely moves. The peaks sit far above what the VU shows. Switch to the <b>sustained chord</b> and the two meters nearly agree. That gap is the <b>crest factor</b>, and it’s why you can’t set levels for drums by the VU alone.'}));
+  st.append(el('div',{class:'notice',html:'Alignment here: 0 VU = −18 dBFS (a common DAW alignment; some studios use −20). On analog gear, 0 VU corresponds to the nominal +4 dBu operating level.'}));
+  const cx=cv.getContext('2d');let vu=0,pk=-90,hold=-90,holdT=0,lastT=null,gapAvg=0,last='';
+  animate(t=>{ready(cv,cx);const w=cv.clientWidth,h=cv.clientHeight;cx.clearRect(0,0,w,h);
+    const dt=lastT===null?0.016:Math.min(0.1,(t-lastT)/1000);lastT=t;
+    let avg=0,fpk=0;
+    if(isMine(o)){const x=chain.extra;x.an.getFloatTimeDomainData(x.buf);let s=0;for(let i=0;i<x.buf.length;i++){const a=Math.abs(x.buf[i]);s+=a;if(a>fpk)fpk=a;}avg=s/x.buf.length;}
+    vu+= (avg-vu)*(1-Math.exp(-dt/0.065));
+    const fpkDb=linDb(fpk);pk=Math.max(fpkDb,pk-dt*(20/1.7));if(fpkDb>=hold||t-holdT>1500){hold=fpkDb;holdT=t;}
+    const vuDb=linDb(vu*Math.PI/2)+18;// sine-calibrated: −18 dBFS peak sine reads 0 VU
+    // VU dial
+    const narrow=w<560,dw=narrow?w*0.7:w*0.62,cxp=dw/2,cyp=h-34,R=Math.min(dw*0.42,h-60);
+    const pos=d=>(dbLin(clamp(d,-20,3))-dbLin(-20))/(dbLin(3)-dbLin(-20));const ang=p=>(-50+100*p)*Math.PI/180;
+    cx.lineWidth=2;cx.strokeStyle='rgba(255,255,255,0.55)';cx.beginPath();cx.arc(cxp,cyp,R,-Math.PI/2+ang(0),-Math.PI/2+ang(pos(0)));cx.stroke();
+    cx.strokeStyle='#C7553E';cx.lineWidth=5;cx.beginPath();cx.arc(cxp,cyp,R,-Math.PI/2+ang(pos(0)),-Math.PI/2+ang(1));cx.stroke();
+    cx.font='10px monospace';
+    [-20,-10,-7,-5,-3,-2,-1,0,1,2,3].forEach(d=>{const a=ang(pos(d));const sx=cxp+Math.sin(a)*R,sy=cyp-Math.cos(a)*R;cx.strokeStyle=d>0?'#C7553E':'rgba(255,255,255,0.6)';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(cxp+Math.sin(a)*(R+8),cyp-Math.cos(a)*(R+8));cx.stroke();
+      if([-20,-10,-5,-3,0,3].includes(d)){cx.fillStyle=d>0?'#C7553E':'rgba(255,255,255,0.75)';const s=(d>0?'+':'')+d;cx.fillText(s,cxp+Math.sin(a)*(R+20)-cx.measureText(s).width/2,cyp-Math.cos(a)*(R+20)+3);}});
+    const na=ang(pos(isMine(o)?vuDb:-25));cx.strokeStyle='#E0A458';cx.lineWidth=2.6;cx.beginPath();cx.moveTo(cxp,cyp);cx.lineTo(cxp+Math.sin(na)*(R-4),cyp-Math.cos(na)*(R-4));cx.stroke();
+    cx.fillStyle='#cfdaec';cx.beginPath();cx.arc(cxp,cyp,6,0,7);cx.fill();
+    cx.font='bold 14px monospace';cx.fillStyle='rgba(255,255,255,0.8)';cx.fillText('VU',cxp-10,cyp-R*0.35);
+    // peak bar
+    const px=narrow?w-34:dw+(w-dw)/2-12,py0=18,py1=h-24,PY=d=>py0+(py1-py0)*(-clamp(d,-60,0)/60);
+    cx.fillStyle='rgba(255,255,255,0.08)';cx.fillRect(px,py0,24,py1-py0);
+    if(isMine(o)){const top=PY(pk);[[-60,-18,'#3E9C92'],[-18,-6,'#E0A458'],[-6,0,'#C7553E']].forEach(([a,b,col])=>{const ya=PY(b),yb=PY(a);const y0=Math.max(top,ya);if(y0<yb){cx.fillStyle=col;cx.fillRect(px,y0,24,yb-y0);}});
+      cx.fillStyle='#fff';cx.fillRect(px,PY(hold)-1,24,2);}
+    cx.font='10px monospace';[0,-6,-12,-18,-24,-36,-48,-60].forEach(d=>{cx.fillStyle=d===-18?'#E0A458':'rgba(255,255,255,0.5)';cx.fillText(String(d),px-26,PY(d)+3);});
+    cx.strokeStyle='rgba(224,164,88,0.7)';cx.setLineDash([3,3]);cx.beginPath();cx.moveTo(px-4,PY(-18));cx.lineTo(px+28,PY(-18));cx.stroke();cx.setLineDash([]);
+    axisLabel(cx,'PEAK dBFS',px-8,12);if(!narrow)axisLabel(cx,'−18 = 0 VU',px+30,PY(-18)+3,'rgba(224,164,88,0.9)');
+    let txt='Press Play';
+    if(isMine(o)&&vu>1e-5){const gap=hold-(vuDb-18);gapAvg+=(gap-gapAvg)*Math.min(1,dt*2);txt='VU <b>'+(vuDb>0?'+':'')+vuDb.toFixed(1)+' VU</b> · peak <b>'+hold.toFixed(1)+' dBFS</b> · peaks sit ≈ <b>'+Math.max(0,gapAvg).toFixed(0)+' dB</b> above the VU reading';}
+    if(txt!==last){rd.innerHTML=txt;last=txt;}
+  });
+}
+
+/* ---- 5. Inverse square law ---- */
+function islStation(){
+  const st=station('isl','Inverse Square Law','Walk away from a source in open space (no room). Every time you double the distance, the level drops about 6 dB.');
+  const cv=el('canvas');st.append(el('div',{class:'scope'},cv));view.append(st);
+  const S={k:0,src:'pink'};// distance = 2^k metres, k in [-1,4]
+  const o={playing:false};const dist=()=>Math.pow(2,S.k);const gRef=0.09;
+  function apply(){if(isMine(o))chain.extra.g2.gain.setTargetAtTime(gRef/dist(),actx.currentTime,0.03);}
+  const dIn=slider(-1,4,0.01,S.k),dVal=el('div',{class:'val'});const dTxt=()=>dVal.textContent=fmtM(dist());dTxt();
+  dIn.oninput=()=>{S.k=+dIn.value;dTxt();apply();};
+  const dbl=el('button',{class:'btn ghost sm'},'Double the distance'),half=el('button',{class:'btn ghost sm'},'Halve it');
+  const setK=k=>{S.k=clamp(k,-1,4);dIn.value=S.k;dTxt();apply();};dbl.onclick=()=>setK(Math.round(S.k)+1);half.onclick=()=>setK(Math.round(S.k)-1);
+  st.append(ctlRow('Distance',dIn,dVal),el('div',{class:'ctl'},el('label',{},'Step'),el('div',{class:'segs'},half,dbl),el('div',{})));
+  st.append(segRow('Source',[['pink','Pink noise'],['piano','Piano phrase']],S.src,k=>{S.src=k;if(o.playing){stopAudio();start();if(chain)own(o);}}));
+  function start(){startChain((c,g)=>{const src=looper(c,S.src==='pink'?pinkBuf(c):pianoBuf(c));const g2=c.createGain();g2.gain.value=gRef/dist();src.connect(g2).connect(g);src.start();return{sources:[src],extra:{g2}};},1);}
+  const rd=el('div',{class:'readout'});
+  st.append(el('div',{class:'lab-actions'},playButton(o,start),rd));
+  st.append(el('div',{class:'tip',html:'<b>Notice:</b> 1 m → 2 m drops 6 dB, and so does 8 m → 16 m: the same <i>ratio</i> of distance gives the same drop. That’s why the graph is a straight line when distance is drawn on a doubling scale. It also means the level changes fast when you’re close and slowly when you’re far.'}));
+  const cx=cv.getContext('2d');let last='';
+  animate(t=>{ready(cv,cx);const w=cv.clientWidth,h=cv.clientHeight;cx.clearRect(0,0,w,h);
+    const x0=34,x1=w-16,X=k=>x0+(x1-x0)*(k+1)/5,y0=20,y1=h-30,Y=db=>y0+(y1-y0)*(-(db-6)/36);// +6 .. −30 dB
+    cx.font='10px monospace';
+    for(let k=-1;k<=4;k++){cx.strokeStyle='rgba(255,255,255,0.08)';cx.lineWidth=1;cx.beginPath();cx.moveTo(X(k),y0);cx.lineTo(X(k),y1);cx.stroke();axisLabel(cx,fmtM(Math.pow(2,k)),X(k)-12,h-14);}
+    for(let db=6;db>=-30;db-=6){cx.strokeStyle='rgba(255,255,255,0.06)';cx.beginPath();cx.moveTo(x0,Y(db));cx.lineTo(x1,Y(db));cx.stroke();axisLabel(cx,(db>0?'+':'')+db,4,Y(db)+3);}
+    axisLabel(cx,'dB re 1 m',x0+4,12);axisLabel(cx,'distance (each step = ×2)',x1-150,12);
+    cx.strokeStyle='#E0A458';cx.lineWidth=2.4;cx.beginPath();cx.moveTo(X(-1),Y(6));cx.lineTo(X(4),Y(-24));cx.stroke();
+    for(let k=-1;k<=4;k++){cx.fillStyle='rgba(224,164,88,0.6)';cx.beginPath();cx.arc(X(k),Y(-6*k),3,0,7);cx.fill();}
+    const db=-6*S.k;cx.fillStyle='#3E9C92';cx.beginPath();cx.arc(X(S.k),Y(db),7,0,7);cx.fill();
+    cx.fillStyle='#fff';cx.fillText((db>0?'+':'')+db.toFixed(1)+' dB',X(S.k)+10,Y(db)-8);
+    const txt='<b>'+fmtM(dist())+'</b> · <b>'+(db>0?'+':'')+db.toFixed(1)+' dB</b> re 1 m · ×'+(1/dist()).toFixed(3)+' pressure · every doubling = −6 dB';
+    if(txt!==last){rd.innerHTML=txt;last=txt;}
+  });
+}
+
+/* ---- 6. Critical distance ---- */
+const ROOMS={studio:{n:'Treated studio',V:60,RT:0.3},classroom:{n:'Classroom',V:200,RT:0.8},hall:{n:'Concert hall',V:15000,RT:2.0},church:{n:'Stone church',V:20000,RT:4.0}};
+function critDist(room,mic){const r=ROOMS[room];return 0.057*Math.sqrt(r.V/r.RT)*(mic==='card'?Math.sqrt(3):1);}
+function cdStation(){
+  const st=station('cd','Critical Distance','Walk back from the source in a room. The direct sound fades 6 dB per doubling; the room’s sound stays about the same. Where they meet is the critical distance.');
+  const cv=el('canvas');st.append(el('div',{class:'scope tall'},cv));view.append(st);
+  const S={room:'hall',mic:'omni',k:0};// distance = 2^k m, k in [-2, 4.32]
+  const o={playing:false};const dist=()=>Math.pow(2,S.k);const gRef=0.07;
+  function apply(){if(!isMine(o))return;const x=chain.extra,t=actx.currentTime,dc=critDist(S.room,S.mic);
+    x.dry.gain.setTargetAtTime(gRef/dist(),t,0.04);x.wet.gain.setTargetAtTime(gRef/dc,t,0.08);
+    if(x.room!==S.room){x.conv.buffer=roomIR(actx,ROOMS[S.room].RT);x.room=S.room;}}
+  st.append(segRow('Room',Object.entries(ROOMS).map(([k,r])=>[k,r.n]),S.room,k=>{S.room=k;apply();}));
+  st.append(segRow('Mic',[['omni','Omni'],['card','Cardioid (×1.7)']],S.mic,k=>{S.mic=k;apply();}));
+  const dIn=slider(-2,4.32,0.01,S.k),dVal=el('div',{class:'val'});const dTxt=()=>dVal.textContent=fmtM(dist());dTxt();
+  dIn.oninput=()=>{S.k=+dIn.value;dTxt();apply();};
+  st.append(ctlRow('Distance',dIn,dVal));
+  function start(){startChain((c,g)=>{const src=looper(c,pianoBuf(c));const dry=c.createGain(),wet=c.createGain(),conv=c.createConvolver();conv.buffer=roomIR(c,ROOMS[S.room].RT);dry.gain.value=gRef/dist();wet.gain.value=gRef/critDist(S.room,S.mic);src.connect(dry).connect(g);src.connect(conv).connect(wet).connect(g);src.start();return{sources:[src],extra:{dry,wet,conv,room:S.room}};},1);}
+  const rd=el('div',{class:'readout'});
+  st.append(el('div',{class:'lab-actions'},playButton(o,start),rd));
+  st.append(el('div',{class:'tip',html:'<b>Notice:</b> start close and the piano is clear and present; walk back past the critical distance and it turns distant and washy, even though the room itself didn’t get louder. Compare the rooms: the <b>stone church</b> is bigger than the classroom but so reverberant that its critical distance is shorter than the concert hall’s. Switch to a <b>cardioid</b> and the line moves out about 1.7×.'}));
+  st.append(el('div',{class:'notice',html:'Critical distance here is calculated from each room’s volume and RT60 (D<sub>c</sub> ≈ 0.057·√(V ÷ RT60)), and the room sound is synthesized to match. It’s a simplified model: in real rooms, early reflections and the source’s own directivity shift it.'}));
+  const cx=cv.getContext('2d');let last='';
+  animate(()=>{ready(cv,cx);const w=cv.clientWidth,h=cv.clientHeight;cx.clearRect(0,0,w,h);
+    const dc=critDist(S.room,S.mic),kmin=-2,kmax=4.32,x0=34,x1=w-14,X=k=>x0+(x1-x0)*(k-kmin)/(kmax-kmin),y0=24,y1=h-34;
+    const dbAt=k=>-6*k,dRev=-20*Math.log10(dc),Y=db=>y0+(y1-y0)*((12-db)/42);// +12 .. −30
+    cx.font='10px monospace';
+    // zones
+    const kc=Math.log2(dc);cx.fillStyle='rgba(224,164,88,0.06)';cx.fillRect(x0,y0,X(kc)-x0,y1-y0);cx.fillStyle='rgba(62,156,146,0.07)';cx.fillRect(X(kc),y0,x1-X(kc),y1-y0);
+    const narrow=w<560;axisLabel(cx,narrow?'DIRECT FIELD':'DIRECT FIELD · clear, close',x0+6,y1-8,'rgba(224,164,88,0.8)');const rt=narrow?'ROOM FIELD':'REVERBERANT FIELD · distant, washy';axisLabel(cx,rt,Math.max(X(kc)+6,x1-cx.measureText(rt).width-4),y0+14,'rgba(62,156,146,0.9)');
+    (narrow?[0.25,1,4,16]:[0.25,0.5,1,2,4,8,16]).forEach(m=>{const k=Math.log2(m);cx.strokeStyle='rgba(255,255,255,0.07)';cx.beginPath();cx.moveTo(X(k),y0);cx.lineTo(X(k),y1);cx.stroke();axisLabel(cx,fmtM(m),X(k)-12,h-18);});
+    for(let db=12;db>=-30;db-=6)axisLabel(cx,(db>0?'+':'')+db,4,Y(db)+3);
+    // lines
+    cx.strokeStyle='#E0A458';cx.lineWidth=2.4;cx.beginPath();cx.moveTo(X(kmin),Y(dbAt(kmin)));cx.lineTo(X(kmax),Y(dbAt(kmax)));cx.stroke();
+    cx.strokeStyle='#3E9C92';cx.beginPath();cx.moveTo(x0,Y(dRev));cx.lineTo(x1,Y(dRev));cx.stroke();
+    // crossing
+    cx.fillStyle='#fff';cx.beginPath();cx.arc(X(kc),Y(dRev),5,0,7);cx.fill();cx.setLineDash([3,3]);cx.strokeStyle='rgba(255,255,255,0.5)';cx.beginPath();cx.moveTo(X(kc),Y(dRev));cx.lineTo(X(kc),y1);cx.stroke();cx.setLineDash([]);
+    cx.fillStyle='#fff';const lab='Dc ≈ '+fmtM(dc);cx.fillText(lab,clamp(X(kc)-cx.measureText(lab).width-8,x0+2,x1-cx.measureText(lab).width),Y(dRev)+18);
+    axisLabel(cx,'direct sound (−6 dB per ×2)',x0+6,y1-22,'rgba(224,164,88,0.9)');axisLabel(cx,'room (same everywhere)',x1-150,Y(dRev)-6,'rgba(62,156,146,0.9)');
+    // listener
+    cx.strokeStyle='rgba(255,255,255,0.8)';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(X(S.k),y0);cx.lineTo(X(S.k),y1);cx.stroke();
+    cx.fillStyle='#E0A458';cx.beginPath();cx.arc(X(S.k),Y(dbAt(S.k)),6,0,7);cx.fill();cx.fillStyle='#3E9C92';cx.beginPath();cx.arc(X(S.k),Y(dRev),6,0,7);cx.fill();
+    axisLabel(cx,'you',X(S.k)-8,y0-6,'#fff');
+    const diff=dbAt(S.k)-dRev;const r=ROOMS[S.room];
+    const txt=r.n+' ('+r.V.toLocaleString()+' m³, RT60 '+r.RT+' s) · <b>Dc ≈ '+fmtM(dc)+'</b> · you: '+fmtM(dist())+' · '+(Math.abs(diff)<0.5?'<b>direct = room</b>':diff>0?'direct is <b>'+diff.toFixed(1)+' dB</b> louder than the room':'room is <b>'+(-diff).toFixed(1)+' dB</b> louder than the direct');
+    if(txt!==last){rd.innerHTML=txt;last=txt;}
+  });
+}
+
+function renderLab(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Hear it · use headphones'),el('h1',{class:'page'},'Lab'),
+    el('p',{class:'lead'},'Six stations, all synthesized, nothing pre-recorded. Start each one at a low volume. The point is to connect what you see to what you hear.'));
+  view.append(el('div',{class:'grouphead'},el('div',{class:'k'},G.shape.k),el('div',{class:'t'},G.shape.t)));
+  timbreStation();envStation();
+  view.append(el('div',{class:'grouphead'},el('div',{class:'k'},G.level.k),el('div',{class:'t'},G.level.t)));
+  dbStation();vuStation();
+  view.append(el('div',{class:'grouphead'},el('div',{class:'k'},G.space.k),el('div',{class:'t'},G.space.t)));
+  islStation();cdStation();
+}
+
+/* ============ flashcards ============ */
+let fcQueue=[];
+function renderCards(){
+  clearAnims();stopAudio();view.innerHTML='';
+  view.append(el('div',{class:'eyebrow'},'Active recall'),el('h1',{class:'page'},'Flashcards'),
+    el('p',{class:'lead'},'See the concept, then out loud give its definition, a number or formula if it has one, and one example. Reveal to check; mark “Got it” only when you had it.'));
+  const t=el('div',{class:'lab-actions'},el('button',{class:'btn ghost sm'},'Restart deck'),el('button',{class:'btn ghost sm'},'Drill the unmastered'));
+  view.append(t,el('div',{id:'fcHost'}));
+  t.children[0].onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};
+  t.children[1].onclick=()=>{const weak=C.filter(c=>(store.mastered[c.id]||0)<2).map(c=>c.id);fcQueue=shuffle(weak.length?weak:C.map(c=>c.id));drawCard();};
+  if(!fcQueue.length)fcQueue=shuffle(C.map(c=>c.id));drawCard();
+}
+function drawCard(){
+  const host=document.getElementById('fcHost');if(!host)return;host.innerHTML='';
+  if(!fcQueue.length){host.append(el('div',{class:'stage'},el('div',{class:'bigscore',html:'✓'}),el('p',{class:'prompt'},'Deck complete. '+masteredCount()+' of '+TOTAL+' mastered.'),el('div',{class:'actions'},el('button',{class:'btn primary'},'Go again'))));host.querySelector('.btn').onclick=()=>{fcQueue=shuffle(C.map(c=>c.id));drawCard();};return;}
+  const c=byId[fcQueue[0]],done=TOTAL-fcQueue.length+1;
+  const stage=el('div',{class:'stage'},el('div',{class:'counter'},'Card '+done+' of '+TOTAL+(((store.mastered[c.id]||0)>=2)?' · mastered':'')),
+    el('div',{class:'art',html:VIZ[c.id]()}),el('h3',{style:'margin:6px 0 0;font-size:21px'},c.name),el('div',{class:'prompt'},G[c.group].k),el('div',{id:'fcReveal'}));
+  host.append(stage);
+  const rev=stage.querySelector('#fcReveal');rev.append(el('div',{class:'actions'},el('button',{class:'btn primary'},'Reveal answer')));
+  rev.querySelector('.btn').onclick=()=>showBack(c);
+}
+function showBack(c){
+  const rev=document.getElementById('fcReveal');rev.innerHTML='';
+  const block=el('div',{class:'reveal'},el('p',{html:c.defn}));
+  if(c.formula)block.append(el('div',{class:'formula',html:c.formula}));
+  if(c.param)block.append(el('div',{class:'note param',html:'<b>Worth knowing: </b>'+c.param}));
+  block.append(el('div',{class:'note why',html:'<b>Why it matters: </b>'+c.why}));
+  rev.append(block,el('div',{class:'actions'},el('button',{class:'btn again'},'Review again'),el('button',{class:'btn ok'},'Got it')));
+  const[a,o]=rev.querySelectorAll('.actions .btn');
+  a.onclick=()=>{fcQueue.push(fcQueue.shift());drawCard();};
+  o.onclick=()=>{store.mastered[c.id]=(store.mastered[c.id]||0)+1;save();refreshProgress();fcQueue.shift();drawCard();};
+}
+
+/* ============ quiz ============ */
+const QPOOL=[
+ {q:'Two instruments play the same note at the same loudness but sound different. That difference is:',opts:['Timbre','Pitch','Amplitude','Wavelength'],a:'Timbre',ex:'<b>Timbre</b> (tone color) comes mostly from harmonic content and the envelope.'},
+ {q:'Timbre is determined mostly by a sound’s:',opts:['Harmonic content (and envelope)','Fundamental frequency only','Distance from the listener','Sample rate'],a:'Harmonic content (and envelope)',ex:'Which harmonics are present, how strong each one is, and how the sound starts and changes over time.'},
+ {q:'A sine wave contains:',opts:['Only the fundamental, no harmonics','Only odd harmonics','Every harmonic','Random noise'],a:'Only the fundamental, no harmonics',ex:'A <b>sine</b> is the one pure frequency, the building block of every other waveform.'},
+ {q:'A square wave contains:',opts:['Only odd harmonics','Only even harmonics','Every harmonic','No harmonics'],a:'Only odd harmonics',ex:'Odd harmonics at 1/n strength give the hollow sound (like a low clarinet).'},
+ {q:'The shape of a sound’s level over time (attack, decay, sustain, release) is its:',opts:['Envelope','Waveform','Timbre','Critical distance'],a:'Envelope',ex:'<b>Envelope</b>, usually described as ADSR.'},
+ {q:'In ADSR, Sustain is:',opts:['A level held while the note continues','The time it takes to fade out','The time to reach the peak','The length of the note'],a:'A level held while the note continues',ex:'A, D, and R are <b>times</b>; S is a <b>level</b>.'},
+ {q:'A piano note fades away even if you keep holding the key. In ADSR terms, its sustain is:',opts:['About zero, so it dies away during the decay','Full level','Longer than its attack','The same as its release'],a:'About zero, so it dies away during the decay',ex:'Piano: instant attack, long decay, no true sustain.'},
+ {q:'A decibel is:',opts:['A logarithmic ratio between two levels','An absolute unit of loudness','A unit of frequency','A unit of distance'],a:'A logarithmic ratio between two levels',ex:'dB always compares a level to a reference. The suffix (SPL, FS, u, V) names that reference.'},
+ {q:'Raising a signal by 6 dB:',opts:['Doubles its pressure (amplitude)','Doubles how loud it sounds','Doubles its frequency','Has no audible effect'],a:'Doubles its pressure (amplitude)',ex:'+6 dB = ×2 pressure or voltage. Sounding twice as loud takes about <b>+10 dB</b>.'},
+ {q:'About how many dB does it take for a sound to seem twice as loud?',opts:['+10 dB','+3 dB','+1 dB','+20 dB'],a:'+10 dB',ex:'A rule of thumb from listening tests. +3 dB doubles the <i>power</i>; +6 dB doubles the <i>pressure</i>.'},
+ {q:'0 dB SPL means:',opts:['The threshold of hearing (20 µPa)','Silence','The threshold of pain','Digital full scale'],a:'The threshold of hearing (20 µPa)',ex:'SPL is referenced to <b>20 micropascals</b>, about the quietest sound we can hear.'},
+ {q:'Normal conversation at about 1 m is roughly:',opts:['60 dB SPL','10 dB SPL','100 dB SPL','130 dB SPL'],a:'60 dB SPL',ex:'≈60 dB SPL. Long exposure above ≈85 dB SPL risks hearing damage; ≈130 is the threshold of pain.'},
+ {q:'Compared with a peak meter, a VU meter:',opts:['Averages over about 300 ms and under-reads transients','Responds instantly to every sample','Only works on digital audio','Measures frequency'],a:'Averages over about 300 ms and under-reads transients',ex:'VU reads closer to perceived loudness; a snare can peak 10–20 dB above the needle.'},
+ {q:'On analog gear, 0 VU typically corresponds to:',opts:['+4 dBu','0 dBFS','0 dB SPL','−60 dBFS'],a:'+4 dBu',ex:'The professional nominal operating level. In a DAW it’s often aligned to −18 or −20 dBFS.'},
+ {q:'Doubling your distance from a source in open space changes the level by about:',opts:['−6 dB','−3 dB','−12 dB','−1 dB'],a:'−6 dB',ex:'<b>Inverse square law:</b> intensity falls with distance², which is −6 dB per doubling.'},
+ {q:'Moving from 1 m to 10 m from a source (open space) drops the level by about:',opts:['20 dB','10 dB','6 dB','60 dB'],a:'20 dB',ex:'20 × log₁₀(10) = 20 dB.'},
+ {q:'The distance at which the direct sound and the reverberant sound are equal is the:',opts:['Critical distance','Wavelength','Nyquist distance','3:1 distance'],a:'Critical distance',ex:'Inside it the direct sound dominates; beyond it the room dominates.'},
+ {q:'Making a room more reverberant (longer RT60) moves the critical distance:',opts:['Closer to the source','Farther from the source','It doesn’t change','To exactly 1 m'],a:'Closer to the source',ex:'Dc ≈ 0.057 × √(V ÷ RT60). More reverb means the room catches up with the direct sound sooner.'},
+ {q:'Switching from an omni to a cardioid mic, you can work from:',opts:['About 1.7× farther away for the same direct-to-room balance','Half the distance','Exactly the same distance','Ten times farther'],a:'About 1.7× farther away for the same direct-to-room balance',ex:'A cardioid rejects more of the room, so its “distance factor” is ≈1.7.'}
+];
+let quiz={list:[],i:0,score:0,wrong:[]};
+function renderQuiz(){clearAnims();stopAudio();view.innerHTML='';view.append(el('div',{class:'eyebrow'},'Check the connections'),el('h1',{class:'page'},'Quiz'),el('div',{id:'qHost'}));startQuiz();}
+function startQuiz(){quiz={list:shuffle(QPOOL).slice(0,10),i:0,score:0,wrong:[]};drawQ();}
+function drawQ(){
+  const host=document.getElementById('qHost');if(!host)return;host.innerHTML='';
+  if(quiz.i>=quiz.list.length){if(quiz.score>store.quizBest){store.quizBest=quiz.score;save();}
+    const stage=el('div',{class:'stage'},el('div',{class:'bigscore',html:quiz.score+'<span>/'+quiz.list.length+'</span>'}),
+      el('p',{class:'prompt'},quiz.score===quiz.list.length?'Perfect. You know the numbers and the reasons.':quiz.score>=8?'Strong. Clean up the few below.':'Good start. Revisit these in Learn and the Lab, then run it again.'),
+      el('div',{class:'scorebar'},'Best so far: '+store.quizBest+'/10'));
+    if(quiz.wrong.length){stage.append(el('div',{class:'explain on',style:'max-width:520px'},el('b',{},'Worth another look: '),quiz.wrong.join('; ')));}
+    stage.append(el('div',{class:'actions'},el('button',{class:'btn primary'},'New quiz'),el('button',{class:'btn ghost'},'Back to the Lab')));
+    host.append(stage);const[a,b]=stage.querySelectorAll('.actions .btn');a.onclick=startQuiz;b.onclick=()=>setTab('lab');return;}
+  const item=quiz.list[quiz.i];const stage=el('div',{class:'stage'});
+  stage.append(el('div',{class:'scorebar'},'Question '+(quiz.i+1)+' of '+quiz.list.length+' · Score '+quiz.score));
+  stage.append(el('div',{class:'prompt',style:'font-size:16px;color:var(--ink)'},item.q));
+  const opts=el('div',{class:'opts'});shuffle(item.opts).forEach(o=>{const b=el('button',{class:'opt'},o);b.onclick=()=>answerQ(b,o,item,stage);opts.append(b);});
+  stage.append(opts,el('div',{class:'explain',id:'qEx'}));host.append(stage);
+}
+function answerQ(btn,choice,item,stage){
+  stage.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.textContent===item.a)b.classList.add('correct');});
+  if(choice===item.a)quiz.score++;else{btn.classList.add('wrong');quiz.wrong.push(item.a);}
+  const ex=stage.querySelector('#qEx');ex.innerHTML=item.ex;ex.classList.add('on');
+  const next=el('div',{class:'actions'},el('button',{class:'btn primary'},quiz.i===quiz.list.length-1?'See results':'Next'));
+  ex.after(next);next.querySelector('.btn').onclick=()=>{quiz.i++;drawQ();};
+}
+
+/* ============ tabs ============ */
+const RENDER={howto:renderHowto,learn:renderLearn,lab:renderLab,cards:renderCards,quiz:renderQuiz};
+function setTab(name){document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name));clearAnims();stopAudio();RENDER[name]();window.scrollTo({top:0});}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+refreshProgress();setTab('howto');
+</script>
+</body>
+</html>
